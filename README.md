@@ -27,6 +27,37 @@
 - Django: 풍부한 기능을 제공함. Django 자체를 이해하면서 사용하려 노력해야 함.
 - Flask: 작고 가볍다. 마치 처음부터 부품을 조립하는 것과 같이 개발가능함.
 
+### 0.4 OOP(Object-Oriented Programming) 기본 개념
+1. Encapsulation
+   - Class 안에 Data와 Function를 두는 것.
+   - Class: Instance를 찍어내는 설계도
+   - Instance: Class에 의해 찍어낸 결과물
+   - Method: Class 안에 있는 Function
+     - Class를 조작할 수 있는 UI를 제공함
+2. Inheritance
+   - Class를 재사용하고 확장할 수 있음
+   - 부모클래스 속성이 상속받는 클래스에 그대로 전달됨
+3. Abstraction
+   - 인터페이스를 제공해 편의성을 주되 구체적인 구현과정을 숨기는 것
+4. Polymorphism
+   - Poly(여러) + Morphism(형태)
+   - 부모클래스의 Method를 overwrite하되 datatype과 같은 규칙은 준수함
+### 0.5 Python에서 Class 사용하기
+1. Constructer
+   - class가 생성될 때 호출되는 method
+   - python에서는 "__init__"가 constructor 역할을 함.
+   - "__init__" method는 `self` 인자를 가짐
+   - `self`는 instance 자신을 의미한다(javascript `this`)
+   - `self`외에 인자를 추가하면 instance로부터 개별값을 받을 수 있다.
+   - method가 `self`를 사용하든 안하든간에 필수적으로 인자로 두어야 한다.
+2. Inherit하는 법
+   - 상속받을 class의 인자로 부모class를 넣는다
+   - 상속이 이뤄지면 부모class의 method를 사용가능하다
+   - 다만, 부모class와 이름이 같은 method를 다시 선언하면 덮어쓰기(overwriting)이 되어 기존 내용이 사라진다.
+   - 따라서, 부모 class의 내용을 살리고 싶다면 `super()`를 사용한다.
+3. Underscore Method(`__`)
+   - `__init__`
+   - `__str__`: class를 문자열로 호출할 때 return하는 method
 
 # 1.0 개발환경 준비하기
 ### 1.1 Python에서 가상환경이 필요한 이유
@@ -66,3 +97,4 @@
 4. `.gitignore`에 제한할 파일 설정하기
 - `touch .gitignore`
 - [PYTHON GITIGNORE](https://raw.githubusercontent.com/github/gitignore/main/Python.gitignore)
+
