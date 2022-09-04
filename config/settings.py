@@ -25,8 +25,8 @@ SECRET_KEY = 'django-insecure-j6-qut2p+rqg30%su3c0)$7u=ho=x6i6@bl*tzba9=m=19w5=n
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['*']
+CSRF_TRUSTED_ORIGINS=['https://*.run.goorm.io']
 
 # Application definition
 
@@ -105,7 +105,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Seoul'
 
 USE_I18N = True
 

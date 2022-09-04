@@ -27,6 +27,14 @@
 - Django: 풍부한 기능을 제공함. Django 자체를 이해하면서 사용하려 노력해야 함.
 - Flask: 작고 가볍다. 마치 처음부터 부품을 조립하는 것과 같이 개발가능함.
 
+### 0.3.1 Framework vs. Library
+- Library
+  - 개발자가 library를 호출함.
+  - 코드를 import해서 call하면 끝남.
+- Framework
+  - framework가 우리 코드를 사용해 구현함.
+  - framework가 정해놓은 이름과 규칙에 따라야 한다
+
 ### 0.4 OOP(Object-Oriented Programming) 기본 개념
 1. Encapsulation
    - Class 안에 Data와 Function를 두는 것.
@@ -84,7 +92,11 @@
 - `poetry shell`: 버블 접속하기
 - `exit`: 버블 나가기
 
-## 1.4 Git 세팅하기
+## 1.4 Django Project 시작하기
+- `django-admin startproject config .`
+- `manage.py`와 `config/`이 생성된다
+
+## 1.5 Git 세팅하기
 1. Git 시작하기
 - `git init`
 - `git config --global user.email [EMAIL]` / `git config --global user.name [NAME]`
@@ -98,3 +110,63 @@
 - `touch .gitignore`
 - [PYTHON GITIGNORE](https://raw.githubusercontent.com/github/gitignore/main/Python.gitignore)
 
+# 2.0 Django 4.0 알아보기
+## 2.1 Django Project 구조 살펴보기
+- `manage.py`
+  - Terminal에서 Django 명령을 실행할 수 있도록 함.
+- `db.sqlite3`
+  - Dev 단계에서 Django가 사용하는 DB 파일
+  - 첫 runserver에서 빈 파일로 생성됨.
+  - migration을 통해 코드에 알맞는 DB 모양이 되도록 동기화함.
+- `config.settings`
+  - `TIME_ZONE = 'Asia/Seoul'`
+    - 시간대를 대한민국으로 변경함.
+
+### 2.1.1 manage.py 활용한 명령어
+- `python manage.py [명령어]`로 사용가능하다.
+- `runserver`: Django 서버 시작하기
+  - `python manage.py runserver 0.0.0.0:8000`
+  - config.settings: `ALLOWED_HOSTS = ['*']`
+- `migrate`: Migration 진행하기
+- `createsuperuser`: 관리자 계정 생성하기
+
+### 2.2 Migration
+- 코드와 DB 간의 동기화를 해주는 파이썬 코드파일.
+- 동기화가 안된 상태로 runserver할 경우 migration하도록 촉구함
+- migration하는 법
+  - `python manage.py migrate`
+  - migrate 전에 서버 종료하기
+
+### 2.3 Admin Panel
+- 첫 Migration 이후에 사용할 수 있음.
+- Admin Panel 특징
+  - 계정 생성/관리가 수월함.
+  - 계정 정보 수정도 수월함.(비밀번호)
+  - 로그인 보안
+  - 비밀번호 유효성 검사
+- 관리자 계정(Super User) 만들기
+  - `python manage.py createsuperuser`
+
+### 2.4 App
+- App은 마치 Folder와 같다. 각 Folder에는 같은 주제의 Functionality가 들어가 있다.
+- App은 특정 Data와 그에 대한 Logic들을 묶어 놓은 것이다.
+- App들은 별개의 Folder에 들어가 있지만 밀접하게 연결되어 있다.
+### 2.4.1 Airbnb Project에 필요한 App 생각해보기
+- Room
+  - Photo
+  - Description
+  - Amenity
+  - Rule
+  - Price
+- User
+  - profile
+  - socialLogin
+  - identity
+  - email address
+- Review
+  - Upload
+  - See
+  - Reply
+  - link to `Room` and `User`
+- Experience
+- Favorites
