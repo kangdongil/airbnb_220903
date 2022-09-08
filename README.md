@@ -72,7 +72,7 @@
 - Django로 개발하려면 Package를 관리할 수 있는 개발환경을 구축해야한다.
 - 기본적으로 Python은 package를 Global(광역)하게 설치하므로
 - poetry와 같이 가상환경 관리자를 통해 project간 독립적인 환경을 제공해줘야 한다.
-- 가상환경 관리자를 통해 proejct마다 다른 버젼의 package를 관리하기 수월하다.
+- 가상환경 관리자를 통해 project마다 다른 버젼의 package를 관리하기 수월하다.
 
 ## 1.2 Poetry 준비하기
 ### 1.2.1 Poetry를 로컬PC에서 설치하기
@@ -127,13 +127,16 @@
 - `runserver`: Django 서버 시작하기
   - `python manage.py runserver 0.0.0.0:8000`
   - config.settings: `ALLOWED_HOSTS = ['*']`
+- `makemigrations`
 - `migrate`: Migration 진행하기
 - `createsuperuser`: 관리자 계정 생성하기
 
-### 2.2 Migration
-- 코드와 DB 간의 동기화를 해주는 파이썬 코드파일.
+### 2.2 Migrate
+- DB의 형태를 코드에 맞게 수정하는 과정.
+- `migration`: 코드와 DB 간의 동기화를 해주는 파이썬 코드파일.
 - 동기화가 안된 상태로 runserver할 경우 migration하도록 촉구함
 - migration하는 법
+  - `python manage.py makemigrations`
   - `python manage.py migrate`
   - migrate 전에 서버 종료하기
 
@@ -170,3 +173,100 @@
   - link to `Room` and `User`
 - Experience
 - Favorites
+### 2.5 Django Documentation 살펴보기
+- Field Types
+- Field Option
+
+## 3.0 Django Application
+### 3.0.1 App Folder 구조 살펴보기
+- `apps.py`
+  - django가 해당 app를 다루도록 할 때 사용되는 시작점.
+- `models.py`
+  - app의 data에 대한 구체적인 정의나 설명하는 곳.
+  - field: data가 어떠한지 규정하는 것.
+- `admin.py`
+  - model을 통해 admin panel에 어떻게 구현할지 정하는 곳.
+### 3.1.0 App 생성하기
+- `python manage.py startapp [APPNAME]`
+- App의 이름(`[APPNAME]`)은 복수형으로 쓴다.
+### 3.1.1 Django에 App을 등록하기
+- `config/settings.py`
+  - `INSTALLED_APPS = [~, [apps].apps.[Apps]Config]`
+
+### 4.0 App Model
+### 4.0.1 App Model 구조 알아보기
+- App Model은 각 App의 `models.py`에서 다룬다.
+- model은 `django.db.models.Model`을 상속한 class이다.
+- model를 관례적으로 대문자.단수형으로 이름을 짓는다.
+- model은 `entry`들을 가지며, 각 entry는 적합한 datatype을 규정하는 `field`로 이뤄진다.
+- `field`는 data의 모양과 종류를 규정하며, attribute로 자세히 data가 어떠해야 하는지 설명한다.
+### 4.0.2 Django Model의 장점
+- python코드로 작성한 model을 DB가 이해할 수 있는 SQL코드로 변환해 DB와 소통한다.
+- 개발자가 정의한 데이터에 대해 admin panel을 자동으로 생성해준다.
+### 4.1 App Model 다루기
+- django에서 model를 import하기
+  - `from django.db import models`
+- model 만들기
+  - `class [App](models.Model):`
+  - 무슨 model인지 설명하는 주석 달기
+    - `""" Model Deifiniton for [AppName]"""`
+  - model의 구성을 다루는 entry 추가하기(`field`)
+    - `[FIELD_NAME] = models.[FIELD_TYPE]([ATTRIBUTE])`
+### 4.1.2 App Model에서 Field 종류
+- CharField()
+  - 짧은 텍스트
+  - `max_length=`: 글자수 제한
+- TextField()
+  - 긴 텍스트
+- PositiveIntegerField()
+  - 양의 정수
+- BooleanField()
+  - True / False
+- DateField()
+  - auto_now
+  - auto_now_add
+- EmailField()
+- FileField()
+- ImageField()
+
+* 공통 Field Option 종류
+  - `default=`: 기본값
+  - null
+  - blank
+  - choice
+  - enum
+  - help_text
+  - primary_key
+  - unique
+  - verbose_name
+
+### 5.0 Admin Panel
+### 5.1 Admin Panel 다루기
+- admin과 model를 import하기
+  - `django.contrib.admin`
+  - `.models.[APP]`
+- admin에 model 연결하기(decorator;@)
+```
+@admin.register([MODEL])
+class [app]Admin(admin.modelAdmin):
+```
+- `admin.modelAdmin`
+  - django가 default로 제공하는 admin panel
+  - 그대로 사용한다면 pass할 것.
+### 5.2 Admin Panel 상황별로 해결하기
+- Instance 이름으로 설정하기
+  - `models.py`: `__str__`를 `self.name`으로 return하기
+- Admin Panel 기능 살펴보기
+  - `pass` 대신에 이하 내용을 `tuple`(소괄호 배열)로 제시할 수 있다.
+  - `list_display`
+    - column에 제시할 내용
+  - `list_filter`
+    - 우측에 손쉽게 선택할 수 있는 필터메뉴
+  - `list_editable`
+    - Instance를 list 자체에서 수정할 수 있도록 설정함.
+  - `search_fields`
+    - 검색을 통해 조회할 내용
+  - `actions`
+  - `exclude`
+    - admin panel에서 값을 수정할 수 없도록 방지함.
+  - `fieldsets`
