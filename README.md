@@ -78,7 +78,7 @@
 ### 1.2.1 Poetry를 로컬PC에서 설치하기
 ### 1.2.2 Poetry를 GoormIDE에서 설치하기
 1. Python 3.8로 버전올리기
-   - `sudo apt update && sudo apt install -y python3.9 && sudo update-alternatives --install /usr/local/bin/python3 python3 /usr/bin/python3.9 0`
+  - `sudo apt update && sudo apt install -y python3.9 && sudo update-alternatives --install /usr/local/bin/python3 python3 /usr/bin/python3.9 0`
 2. Poetry 설치하기
    - `curl -sSL https://install.python-poetry.org | python3 -`
 3. Poetry를 PATH에 추가하기(`~/.profile`)
@@ -98,17 +98,32 @@
 
 ## 1.5 Git 세팅하기
 1. Git 시작하기
-- `git init`
-- `git config --global user.email [EMAIL]` / `git config --global user.name [NAME]`
+   - `git init`
+   - `git config --global user.email [EMAIL]`   
+      `git config --global user.name [NAME]`
 2. Commit으로 트래킹하기
-- `git add .`
-- `git commit -m "~"`
+   - `git add .`
+   - `git commit -m "~"`
 3. 프로젝트를 Github에 올리기
-- `git remote add origin [GITHUB_REPOSITORY_URL]`
-- `git push origin master`
+   - `git remote add origin [GITHUB_REPOSITORY_URL]`
+   - `git push origin master`
 4. `.gitignore`에 제한할 파일 설정하기
-- `touch .gitignore`
-- [PYTHON GITIGNORE](https://raw.githubusercontent.com/github/gitignore/main/Python.gitignore)
+   - `touch .gitignore`
+   - [PYTHON GITIGNORE](https://raw.githubusercontent.com/github/gitignore/main/Python.gitignore)
+
+## 1.6 Python 개발환경 세팅하기
+### 1.6.1 VSCode
+- Extension: Pylance 설치하기
+- Interpreter를 해당 프로젝트의 poetry 가상환경에 설정하기
+- Formatter를 `black`으로 설치하기
+  - 파일 저장과 함께 포맷팅 진행함
+- `SQLite Viewer`: `db.sqlite3`을 table 형태로 view하기
+### 1.6.2 GoormIDE
+- `poetry add --dev black`
+  - `black [PATH]`
+    - 해당 파일 formatting 진행함
+  - `black [PATH] --check`
+    - format이 안된 파일 갯수 세기
 
 # 2.0 Django 4.0 알아보기
 ## 2.1 Django Project 구조 살펴보기
@@ -126,7 +141,8 @@
 - `python manage.py [명령어]`로 사용가능하다.
 - `runserver`: Django 서버 시작하기
   - `python manage.py runserver 0.0.0.0:8000`
-  - config.settings: `ALLOWED_HOSTS = ['*']`
+  - `config.settings`
+    - `ALLOWED_HOSTS = ['*']`
 - `makemigrations`
 - `migrate`: Migration 진행하기
 - `createsuperuser`: 관리자 계정 생성하기
@@ -139,6 +155,9 @@
   - `python manage.py makemigrations`
   - `python manage.py migrate`
   - migrate 전에 서버 종료하기
+- troubleshooting
+  - `non-nullable field`
+    - null값을 가지지 않는 field의 경우, default을 주어 해결한다.
 
 ### 2.3 Admin Panel
 - 첫 Migration 이후에 사용할 수 있음.
@@ -174,8 +193,9 @@
 - Experience
 - Favorites
 ### 2.5 Django Documentation 살펴보기
-- Field Types
-- Field Option
+- <https://docs.djangoproject.com/en/4.1/>
+- [ield Types](https://docs.djangoproject.com/en/4.1/ref/models/fields/#field-types)
+- [Field Option](https://docs.djangoproject.com/en/4.1/ref/models/fields/#field-options)
 
 ## 3.0 Django Application
 ### 3.0.1 App Folder 구조 살펴보기
@@ -183,7 +203,7 @@
   - django가 해당 app를 다루도록 할 때 사용되는 시작점.
 - `models.py`
   - app의 data에 대한 구체적인 정의나 설명하는 곳.
-  - field: data가 어떠한지 규정하는 것.
+  - `Field`: data가 어떠한지 규정하는 것.
 - `admin.py`
   - model을 통해 admin panel에 어떻게 구현할지 정하는 곳.
 ### 3.1.0 App 생성하기
@@ -191,7 +211,9 @@
 - App의 이름(`[APPNAME]`)은 복수형으로 쓴다.
 ### 3.1.1 Django에 App을 등록하기
 - `config/settings.py`
-  - `INSTALLED_APPS = [~, [apps].apps.[Apps]Config]`
+  ```python3
+  INSTALLED_APPS = [~, [apps].apps.[Apps]Config]
+  ```
 
 ### 4.0 App Model
 ### 4.0.1 App Model 구조 알아보기
@@ -206,50 +228,55 @@
 ### 4.1 App Model 다루기
 - django에서 model를 import하기
   - `from django.db import models`
-- model 만들기
+- Model 만들기
   - `class [App](models.Model):`
   - 무슨 model인지 설명하는 주석 달기
     - `""" Model Deifiniton for [AppName]"""`
   - model의 구성을 다루는 entry 추가하기(`field`)
-    - `[FIELD_NAME] = models.[FIELD_TYPE]([ATTRIBUTE])`
+    ```python3
+    [FIELD_NAME] = models.[FIELD_TYPE]([ATTRIBUTE])
+    ```
 ### 4.1.2 App Model에서 Field 종류
-- CharField()
+- `CharField()`
   - 짧은 텍스트
   - `max_length=`: 글자수 제한
-- TextField()
+- `TextField()`
   - 긴 텍스트
-- PositiveIntegerField()
+- `PositiveIntegerField()`
   - 양의 정수
-- BooleanField()
+- `BooleanField()`
   - True / False
-- DateField()
+- `DateField()`
   - auto_now
   - auto_now_add
-- EmailField()
-- FileField()
-- ImageField()
+- `EmailField()`
+- `FileField()`
+- `ImageField()`
 
 * 공통 Field Option 종류
   - `default=`: 기본값
-  - null
-  - blank
-  - choice
-  - enum
-  - help_text
-  - primary_key
-  - unique
-  - verbose_name
+    - 다음 Field는 기본적으로 Null이 허용되지 않는다.   
+    CharField / BooleanField
+  - `null=`: Null을 허용
+  - `blank=`
+  - `choice=`
+  - `enum=`
+  - `help_text=`
+  - `primary_key=`
+  - `unique=`
+  - `verbose_name=`
+  - `editable=`
 
 ### 5.0 Admin Panel
 ### 5.1 Admin Panel 다루기
 - admin과 model를 import하기
   - `django.contrib.admin`
   - `.models.[APP]`
-- admin에 model 연결하기(decorator;@)
-```
-@admin.register([MODEL])
-class [app]Admin(admin.modelAdmin):
-```
+- admin에 model 연결하기`(decorator;@)`
+   ```python3
+   @admin.register([MODEL])
+	class [app]Admin(admin.modelAdmin):
+   ```
 - `admin.modelAdmin`
   - django가 default로 제공하는 admin panel
   - 그대로 사용한다면 pass할 것.
@@ -258,6 +285,7 @@ class [app]Admin(admin.modelAdmin):
   - `models.py`: `__str__`를 `self.name`으로 return하기
 - Admin Panel 기능 살펴보기
   - `pass` 대신에 이하 내용을 `tuple`(소괄호 배열)로 제시할 수 있다.
+  - 항목이 한 개인 tuple은 쉼표를 넣어주자(종종 괄호가 사라짐.)
   - `list_display`
     - column에 제시할 내용
   - `list_filter`
@@ -269,4 +297,74 @@ class [app]Admin(admin.modelAdmin):
   - `actions`
   - `exclude`
     - admin panel에서 값을 수정할 수 없도록 방지함.
-  - `fieldsets`
+  - `fields`/ `fieldsets`
+
+### 6.0 Django Users App
+- Django에서 자체적으로 User App을 제공한다.
+  - User가 기본적으로 가져야할 요소가 있다.(Name/Email/Password)
+  - permission을 자세하게 설정할 수 있다.
+- 새로 시작하기보다 기존 User App을 확장하는 방향이 효율적이다.
+  - `Substituting a custom User model` 참고바람.
+  - [Doc:Substituting a custom user model](https://docs.djangoproject.com/en/4.1/topics/auth/customizing/#substituting-a-custom-user-model)
+- 프로젝트 처음 시작할 때 User App을 Custom으로 전환하는 것이 수월하다.
+  - 프로젝트 개발 도중에 user model를 대체하는 것은 relationship에 영향을 준다.
+  - 따라서 처음 `runserver`하기 전에 Custom User Model로 전환하거나
+  - 이미 진행했다면 `db.sqlite3`과 migration(폴더,__init__.py 제외)을 제거하고 진행한다.
+- User App에 추가하면 좋은 요소들
+  - Profile Image
+
+### 6.1 Custom한 User App 만들기
+1. App 만들고 django에 등록하기
+- `python manage.py startapp users`
+- `config.settings`
+   - appsConfig 추가하기
+2. 기존 User Model을 inherit한 Custom Model 만들기
+   - `config.settings`
+   ```python3
+   # Custom User Model
+	AUTH_USER_MODEL = 'users.User'
+   ```
+   - User Model을 만들되, 기존 `models.Model`이 아닌   
+   `django.contrib.auth.models.AbstractModel`를 inherit하기
+3. 기존 default user App이 이미 db에 있으므로 초기화한다.
+   - `db.sqlite3`과 `migrations`(폴더, __init__.py 제외)파일들 제거
+   - `python manage.py makemigrations`
+   - `python manage.py migrate`
+4. 기존 UserAdmin을 inherit하기
+   - `CustomUserAdmin`은 `django.contrib.admin`이 아닌   
+   `django.contrib.auth.admin.UserAdmin`을 inherit하기
+
+### 6.2 User Model 확장하기
+- 사용하지 않는 field는 `editable=False` 한다
+  - Admin 수정 페이지에도 뜨지 않게 설정하자
+- `fields`와 `fieldsets`의 차이
+   - `fields`는 단순나열이라면,   
+   `fieldsets`은 세션별로 나눌 수 있다.
+   - `fieldsets`의 경우, 여러 괄호로 나타내어 다소 난해할 수 있다.
+   ```python3
+	fieldsets = (("Title", {"fields: ("Item"),},),)
+   ```
+     - `fieldsets = (([SECTION]),([SECTION]),)`
+     - `[SECTION]: ("[TITLE]", {[FIELD_TYPE]},{[CLASSES]},)`
+     - `[FIELD_TYPE]: {"fields": ("[ENTRY]", "[ENTRY]", ...),}`
+   - [TITLE]을 None으로 하면 제목을 생략할 수 있다.
+   - 괄호 끝에 `,`(쉼표) 넣는 습관을 들이자(종종 개체가 하나면 괄호가 포맷팅되면서 사라지는 오류가 발생함)
+       
+## 7.0 Django Relationship
+- Relationship: 해당 모델과 다른 모델간의 연결 관계를 나타낸다.
+- Django는 data가 DB에 등록되면 자동으로 `pk(id)`를 부여한다.
+- DB는 다른 모델와 relation을 맺을 때, 모델 자체를 가져오는게 아닌 `pk`를 참조한다. 
+### 7.1 ForeignKey
+```python3
+models.ForeignKey("[MODEL]", on_delete=)
+```
+
+- [MODEL]: `[App].[Model]`
+- `on_delete`는 relationship인 모델이 삭제되었을 때 조치사항을 말한다.
+  - models.CASCADE
+    - 삭제되면 함께 없어진다
+  - models.SET_NULL && Null=True
+    - 삭제되어도 데이터는 남는다.
+    - `Null=True`를 추가하여 Null이 가능하게 한다.
+
+  
