@@ -301,9 +301,17 @@
 - `admin.modelAdmin`
   - django가 default로 제공하는 admin panel
   - 그대로 사용한다면 pass할 것.
+
 ### 5.2 Admin Panel 상황별로 해결하기
 - Instance 이름으로 설정하기
   - `models.py`: `__str__`를 `self.name`으로 return하기
+- Model 복수명이 올바르지 않을 때
+  ```python3
+  class Meta:
+  	verbose_name_plural="~"
+  ```
+- 필수 내용이 아닐 때(description처럼)
+  - `blank=True`
 - Admin Panel 기능 살펴보기
   - `pass` 대신에 이하 내용을 `tuple`(소괄호 배열)로 제시할 수 있다.
   - 항목이 한 개인 tuple은 쉼표를 넣어주자(종종 괄호가 사라짐.)
@@ -319,6 +327,8 @@
   - `exclude`
     - admin panel에서 값을 수정할 수 없도록 방지함.
   - `fields`/ `fieldsets`
+  - `readonly_fields`
+    - 표시되지만 수정 안되는 구역
 
 ### 6.0 Django Users App
 - Django에서 자체적으로 User App을 제공한다.
@@ -389,6 +399,10 @@ models.ForeignKey("[MODEL]", on_delete=)
     - 삭제되어도 데이터는 남는다.
     - `Null=True`를 추가하여 Null이 가능하게 한다.
 ### 7.2 ManyToMany Relationship
+- 예)
+```python3
+[ENTRY] = models.ManyToManyField("[Model]")
+```
 
 ## 8.0 Airbnb Project's App List
 ### 8.1 Common App
@@ -417,9 +431,9 @@ class [Model명](TimeStampedModel):
 - `python manage.py startapp rooms`
 - `RoomsConfig`을 `config/settings.py`에 등록하기
 - Room Model의 Entries 추가하기
-  - `country` / `city`
-  - `address` / `description` (`CharField / TextField`)
-  - `price` / `rooms` / `toilets` (`PositiveIntegerField`)
-  - `pet_friendly` / `kind` (`BooleanField / Choices`)
-  - `owner` (`ForeignKey`)
-  - `amenities` (`ManyToManyField`)
+  - country / city
+  - address / description (`CharField / TextField`)
+  - price / rooms / toilets (`PositiveIntegerField`)
+  - pet_friendly / kind (`BooleanField / Choices`)
+  - owner (`ForeignKey`)
+  - amenities (`ManyToManyField`)
