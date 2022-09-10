@@ -240,26 +240,47 @@
 - `CharField()`
   - 짧은 텍스트
   - `max_length=`: 글자수 제한
+  - `choices=`: 드롭바 형태로 값을 선택가능함.
 - `TextField()`
   - 긴 텍스트
 - `PositiveIntegerField()`
   - 양의 정수
 - `BooleanField()`
   - True / False
-- `DateField()`
-  - auto_now
-  - auto_now_add
+- `DateField()` / `DateTimeField()`
+  - auto_now_add: 최초 등록 시간
+  - auto_now: 최종 수정 시간
+  
 - `EmailField()`
 - `FileField()`
 - `ImageField()`
+  - Python 패키지인 `Pillow`를 설치해야 한다.
+    - `poetry add pillow`
+
+### 4.2.1 CharField Choices 만들기
+- 예시)
+    ```python3
+    class GenderChoices(models.TextChoices):
+      MALE = ("male", "Male")
+      FEMALE = ("female", "Female")
+      
+    ... choices=GenderChoices.choices
+    ```
+- CharField의 option으로 `choices`을 만든다.
+- `models.TextChoices`를 inherit한 class를 model 안에 만든다.
+  - `[CHOICE] = ([DB], [USER_LABEL])`
+  - [CHOICE]는 variable으로, 대문자.
+  - [DB]는 DB에 들어가는 내용, 소문자.
+  - [USER_LABEL]는 사용자에게 보이는 내용. 제목형.
+- option `choices`는 `[해당_Choices].choices`를 값으로 가진다.
 
 * 공통 Field Option 종류
   - `default=`: 기본값
     - 다음 Field는 기본적으로 Null이 허용되지 않는다.   
     CharField / BooleanField
   - `null=`: Null을 허용
-  - `blank=`
-  - `choice=`
+  - `blank=`: Form에서 필수인가?
+  - `choices=`
   - `enum=`
   - `help_text=`
   - `primary_key=`
@@ -349,12 +370,13 @@
      - `[FIELD_TYPE]: {"fields": ("[ENTRY]", "[ENTRY]", ...),}`
    - [TITLE]을 None으로 하면 제목을 생략할 수 있다.
    - 괄호 끝에 `,`(쉼표) 넣는 습관을 들이자(종종 개체가 하나면 괄호가 포맷팅되면서 사라지는 오류가 발생함)
-       
+
 ## 7.0 Django Relationship
 - Relationship: 해당 모델과 다른 모델간의 연결 관계를 나타낸다.
 - Django는 data가 DB에 등록되면 자동으로 `pk(id)`를 부여한다.
 - DB는 다른 모델와 relation을 맺을 때, 모델 자체를 가져오는게 아닌 `pk`를 참조한다. 
-### 7.1 ForeignKey
+### 7.1 ForeignKey(OneToMany, ManyToOne)
+- 예)
 ```python3
 models.ForeignKey("[MODEL]", on_delete=)
 ```
@@ -366,5 +388,38 @@ models.ForeignKey("[MODEL]", on_delete=)
   - models.SET_NULL && Null=True
     - 삭제되어도 데이터는 남는다.
     - `Null=True`를 추가하여 Null이 가능하게 한다.
+### 7.2 ManyToMany Relationship
 
-  
+## 8.0 Airbnb Project's App List
+### 8.1 Common App
+- `python manage.py startapp common`
+- `commonConfig`을 `config/settings.py`에 등록하기
+- `TimeStampedModel`의 Entires
+  - `created` / `updated` (`DateTimeField`)
+  	```python3
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    ```
+- `abstract model`으로 설정하기
+  - 해당 Model의 Entries를 DB에 들어가지 않게 한다.
+  ```python3
+  class Meta:
+  	abstract = True
+  ```
+- 대부분 model은 등록 및 수정시간이 필요하므로   
+`models.Model` 대신에 `TimeStampedModel`을 inherit한다.
+```python3
+from common.models import TimeStampedModel
+
+class [Model명](TimeStampedModel):
+```
+### 8.1 Rooms App
+- `python manage.py startapp rooms`
+- `RoomsConfig`을 `config/settings.py`에 등록하기
+- Room Model의 Entries 추가하기
+  - `country` / `city`
+  - `address` / `description` (`CharField / TextField`)
+  - `price` / `rooms` / `toilets` (`PositiveIntegerField`)
+  - `pet_friendly` / `kind` (`BooleanField / Choices`)
+  - `owner` (`ForeignKey`)
+  - `amenities` (`ManyToManyField`)
