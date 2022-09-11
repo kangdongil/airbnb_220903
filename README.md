@@ -78,7 +78,7 @@
 ### 1.2.1 Poetry를 로컬PC에서 설치하기
 ### 1.2.2 Poetry를 GoormIDE에서 설치하기
 1. Python 3.8로 버전올리기
-  - `sudo apt update && sudo apt install -y python3.9 && sudo update-alternatives --install /usr/local/bin/python3 python3 /usr/bin/python3.9 0`
+  - `sudo apt update && sudo apt install -y python3.8 && sudo update-alternatives --install /usr/local/bin/python3 python3 /usr/bin/python3.8 0`
 2. Poetry 설치하기
    - `curl -sSL https://install.python-poetry.org | python3 -`
 3. Poetry를 PATH에 추가하기(`~/.profile`)
@@ -427,13 +427,64 @@ from common.models import TimeStampedModel
 
 class [Model명](TimeStampedModel):
 ```
-### 8.1 Rooms App
+### 8.2 Rooms App
 - `python manage.py startapp rooms`
 - `RoomsConfig`을 `config/settings.py`에 등록하기
 - Room Model의 Entries 추가하기
+  - name(`CharField`)
   - country / city
-  - address / description (`CharField / TextField`)
-  - price / rooms / toilets (`PositiveIntegerField`)
-  - pet_friendly / kind (`BooleanField / Choices`)
-  - owner (`ForeignKey`)
-  - amenities (`ManyToManyField`)
+  - address / description(`CharField / TextField`)
+  - price / rooms / toilets(`PositiveIntegerField`)
+  - pet_friendly / kind(`BooleanField / Choices`)
+  - owner(`ForeignKey`)
+  - amenities(`ManyToManyField`)
+- Amenity Model의 Entries 추가하기
+  - name(`CharField`)
+  - description(`TextField`)
+- RoomAdmin/AmenityAdmin 구현하기
+  - `__str__`을 self.name을 return하기
+  - Amenity의 복수형 이름을 `Amenities`으로 바꾸기
+  - list_display할 field를 정하기
+  - list_filter할 field를 정하기
+  - Amenity 수정 페이지에 `created_at`와 `updated_at`을 readonly로 나타나게 하기
+
+### 8.3 Experiences App
+- `python manage.py startapp experiences`
+- `ExperiencesConfig`을 `config/settings.py`에 등록하기
+- Experience Model의 Entries 추가하기
+  - name(`CharField`)
+  - country / city
+  - host(`ForeignKey`)
+  - price(`PositiveIntegerField`)
+  - address(`CharField`)
+  - start / end(`TimeField`)
+  - description(`TextField`)
+  - perks(`ManyToManyField`)
+- Perk Model의 Entries 추가하기
+  - name(`CharField`)
+  - details(`CharField`)
+  - description(`TextField`)
+- ExperienceAdmin/PerkAdmin 구현하기
+  - `__str__`을 self.name을 return하기
+  - list_display할 field를 정하기
+  
+### 8.4 Categories App
+- `python manage.py startapp categories`
+- `CategoriesConfig`을 `config/settings.py`에 등록하기
+- Category Model의 Entries 추가하기
+  - name(`CharField`)
+  - kind(`Choices`)
+- Room Model과 Experience Model에 `category` 추가하기
+  ```python3
+  category = models.ForeignKey(
+    "categories.Category",
+    on_delete=models.SET_NULL,
+    blank=True,
+    null=True,
+  )
+  ```
+- CategoryAdmin 구현하기
+  - `__str__`을 self.name을 return하기
+  - Category의 복수형 이름을 `Categories`으로 바꾸기
+  - list_display할 field를 정하기
+  - list_filter할 field를 정하기
