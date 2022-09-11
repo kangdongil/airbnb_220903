@@ -317,6 +317,7 @@
   - 항목이 한 개인 tuple은 쉼표를 넣어주자(종종 괄호가 사라짐.)
   - `list_display`
     - column에 제시할 내용
+    - `__str__`을 display 가능하다.
   - `list_filter`
     - 우측에 손쉽게 선택할 수 있는 필터메뉴
   - `list_editable`
@@ -487,4 +488,15 @@ class [Model명](TimeStampedModel):
   - `__str__`을 self.name을 return하기
   - Category의 복수형 이름을 `Categories`으로 바꾸기
   - list_display할 field를 정하기
+  - list_filter할 field를 정하기
+  
+### 8.5 Reviews App
+- `python manage.py startapp reviews`
+- `ReviewsConfig`을 `config/settings.py`에 등록하기
+- Reivew Model의 Entries 추가하기
+  - `user` / `room` / `experience`(`ForeignKey`)
+  - `payload`(`TextField`)
+  - `rating`(`PositiveIntegerField`)
+- ReviewAdmin 구현하기
+  - `__str__`을 list_display하기
   - list_filter할 field를 정하기
