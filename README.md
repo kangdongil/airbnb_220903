@@ -305,6 +305,7 @@
 ### 5.2 Admin Panel 상황별로 해결하기
 - Instance 이름으로 설정하기
   - `models.py`: `__str__`를 `self.name`으로 return하기
+  - `f""`를 사용해 여러 field 값을 나타낼 수 있다.
 - Model 복수명이 올바르지 않을 때
   ```python3
   class Meta:
@@ -494,9 +495,36 @@ class [Model명](TimeStampedModel):
 - `python manage.py startapp reviews`
 - `ReviewsConfig`을 `config/settings.py`에 등록하기
 - Reivew Model의 Entries 추가하기
-  - `user` / `room` / `experience`(`ForeignKey`)
-  - `payload`(`TextField`)
-  - `rating`(`PositiveIntegerField`)
+  - user / room / experience(`ForeignKey`)
+  - payload(`TextField`)
+  - rating(`PositiveIntegerField`)
 - ReviewAdmin 구현하기
+  - `__str__`에 `user` 이름과 `rating` 넣기
   - `__str__`을 list_display하기
   - list_filter할 field를 정하기
+  
+### 8.6 Wishlists App
+- `python manage.py startapp wishlists`
+- `WishlistsConfig`을 `config/settings.py`에 등록하기
+- Wishlist Model의 Entries 추가하기
+  - name(`CharField`)
+  - rooms / experiences (`ManyToManyField`)
+  - owner(`ForeignKey`)
+- WishlistAdmin 구현하기
+  - `__str__`을 self.name을 return하기
+  - list_display할 field를 정하기
+  
+### 8.7 Bookings App
+- `python manage.py startapp bookings`
+- `BookingsConfig`을 `config/settings.py`에 등록하기
+- Booking Model의 Entries 추가하기
+  - kind(`Choices`)
+  - user / room / experience(`ForeignKey`)
+  - check_in / check_out(`DateField`)
+  - experience_time(`DateTimeField`)
+  - guesets(`PositiveIntegerField`)
+- BookingAdmin 구현하기
+  - `__str__`에 `user`와 `kind`를 return하기
+  - list_display할 field를 정하기
+  - list_filter할 field를 정하기
+  
