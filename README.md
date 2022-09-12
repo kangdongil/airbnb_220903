@@ -528,3 +528,11 @@ class [Model명](TimeStampedModel):
   - list_display할 field를 정하기
   - list_filter할 field를 정하기
   
+### 8.8 Medias App
+- `python manage.py startapp medias`
+- `MediasConfig`을 `config/settings.py`에 등록하기
+- Photo / Video Model의 Entries 추가하기
+  - file(`ImageField`/`FileField`(Video))
+  - description(`CharField`)
+  - room / experience(`ForeignKey`)
+    - if chooseable, make sure `null` and `blank` is `True`
