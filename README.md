@@ -66,6 +66,7 @@
 3. Underscore Method(`__`)
    - `__init__`
    - `__str__`: class를 문자열로 호출할 때 return하는 method
+   - 기타 Method는 `dir()`를 통해 확인가능하다.
 
 # 1.0 개발환경 준비하기
 ### 1.1 Python에서 가상환경이 필요한 이유
@@ -237,7 +238,7 @@
     ```python3
     [FIELD_NAME] = models.[FIELD_TYPE]([ATTRIBUTE])
     ```
-### 4.1.2 App Model에서 Field 종류
+### 4.2 App Model에서 Field 종류
 - `CharField()`
   - 짧은 텍스트
   - `max_length=`: 글자수 제한
@@ -287,6 +288,17 @@
   - `primary_key=`
   - `unique=`
   - `editable=`
+
+### 4.3 Model Method vs. Admin Method
+- Model Method
+  - model 안에 포함되는 function을 말한다.
+    - argument는 `self`다
+  - ORM을 통해 이용가능하다.
+  - Model과 Admin 구분없이 넓게 사용가능하다.
+- Admin Method
+  - model 안에 포함되는 function을 말한다.
+    - argument는 `self`와 register한 `model` 두개다.
+  - Admin에서만 사용가능하다.
 
 ### 5.0 Admin Panel
 ### 5.1 Admin Panel 다루기
@@ -407,6 +419,30 @@ models.ForeignKey("[MODEL]", on_delete=)
 ```python3
 [ENTRY] = models.ManyToManyField("[Model]")
 ```
+### 7.3 Reverse Accessor
+- 해당 Model이 얼마나 ForeignKey되어졌는지 알 수 있다.
+  - Room에게 Owner는 User를 가리킨거라면,
+     Reverse Accessor는 해당 User가 얼마나 많은 Room들에게 가리켜졌는지 확인가능하다.
+- Filter Lookup으로 ForeignKey 접속하기
+  - ForeignKey한 model의 field를 참조가능하다.
+  ```python3
+  Room.objects.filter(owner__username="admin")
+  ```
+  - chaining도 가능하다.
+- ForeignKey할 시, 대상 model에 대해`[model_name]_set`으로 QuerySet을 받을 수 있다.
+- 모든 Relationship에 대해 `related_name` 속성을 추가하면 `_set`의 이름을 바꿀 수 있다.
+  - `room_set`을 `related_name="rooms"`으로 바꾸면 `.rooms`로 대상 model을 접속가능하다.
+
+### 7.4 Relationship 실전에서 쓰기
+- 두 모델간의 연결관계가 있다. (Relationship)
+- `多:1 관계`: ForeignKey(ManyToOne). related_name은 복수형.
+- `多:多 관계`: ManyToManyField. related_name은 복수형.
+- `1:1 관계`: OneToOneField. related_name은 단수형.
+- `多:1 관계`: ForeignKey의 Reverse Accessor(`_set`)
+
+### 7.4.1 Reverse Accessors Clashes(`fields.E304`) 해결하기
+- 다른 두 관계의 역(Reverse)가 같은 관계를 가질 때 충돌이 발생한다.
+- `[model]_[models]`로 각각 이름을 정한다.
 
 ## 8.0 Airbnb Project's App List
 ### 8.1 Common App
@@ -559,27 +595,46 @@ class [Model명](TimeStampedModel):
 - QuerySet: 개선된 Array로 연이은 작업을 가능하게 한다.
   - chaining: 연이은 작업을 통해 원하는 결과를 구체적으로 받을 수 있다.
   - lazy-load: DB 과부하를 방지하고자 구체적으로 요청한 내용만 DB를 호출함.
+- query값을 variable에 저장해 사용할 수 있다.
+- ForeignKey를 통해 다른 연관된 Model도 다룰 수 있다.
+- variable 값을 수정한 후, `.save()`하면 DB에 저장된다.
 ### 9.1 Django Manager(`.objects`)
-- `.objects.all()`: 모든 Instance를 QuerySet로 제공함.
-- `.get([PROP]=[VALUE]): 조건에 해당하는 유일한 instance를 QuerySet로 제공함.
-- `.filter([PROP]=[VALUE])`: 조건에 해당하는 instance들을 QuerySet로 제공함.
-  - filter에 여러 조건을 둘 수도 있다.
-  - `.filter([PROP1]=[VALUE], [PROP2]=[VALUE])`
-- `.exclude([PROP]=[NAME])`: 결과 중 해당되는 값을 제외한다
-- `.create()`
-- `.delete()`
-- `.count()`
-* Field Lookups
-  - SQL에서 Where절에 해당함.
+- QuerySet을 return하는 method들
+  - `.objects.all()`: 모든 Instance를 QuerySet로 제공함.
+  - `.get([PROP]=[VALUE]): 조건에 해당하는 유일한 instance를 QuerySet로 제공함.
+  - `.filter([PROP]=[VALUE])`: 조건에 해당하는 instance들을 QuerySet로 제공함.
+    - filter에 여러 조건을 둘 수도 있다.
+    - `.filter([PROP1]=[VALUE], [PROP2]=[VALUE])`
+  - `.exclude([PROP]=[NAME])`: 결과 중 해당되는 값을 제외한다
+- DB에서 CRUD 역할을 하는 method들
+  - `.create()`
+    - `get_or_create()`: 중복되지 않게 DB에 data를 추가함.
+  - `.delete()`
+- DB State를 return하는 method들
+  - `.exists()`: 해당 조건의 QuerySet이 존재하는지 True나 False를 return함.
+  ```python3
+  Room.filter(price__gte=150).exists() -> True
+  ```
+  - `.count()`: 해당 조건의 QuerySet에 item이 몇 개인지 return함.
+### 9.1.1 Field Lookups
+- SQL에서 Where절에 해당함.
+- Lookup도 Chaining이 가능하다.
+  - `pub_date__month__gte`
   - 예)
   ```python3
   [Model].objects.filter(price__gte=50)
   ```
-  - [PROP] 바로 뒤에 __[Lookup]을 적으면 조건에 해당한 결과를 받을 수 있다.
+- [PROP] 바로 뒤에 __[Lookup]을 적으면 조건에 해당한 결과를 받을 수 있다.
+- NUMBER 관련
   - `gt(e)` / `lt(e)`: greater than (equal) / less than (equal)
-  - contains: VALUE를 포함하는가?
-  - startswith: value로 시작하는가?
-
-- query값을 variable에 저장해 사용할 수 있다.
-- ForeignKey를 통해 다른 연관된 Model도 다룰 수 있다.
-- variable 값을 수정한 후, `.save()`하면 DB에 저장된다.  
+- TEXT 관련
+  - `iexact`: 대문자/소문자 구분없이(case_insensitive)
+  - `contains`: VALUE를 포함하는가?
+  - `icontains` = `iexact` + `contains`
+  - `startswith`: value로 시작하는가?
+  - `endswith`
+- DATE 관련
+  - `year`
+  ```python3
+  Room.objects.filter(created_at__year=2022)
+  ```

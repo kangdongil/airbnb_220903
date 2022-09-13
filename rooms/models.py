@@ -24,12 +24,14 @@ class Room(CommonModel):
     owner = models.ForeignKey(
         "users.User",
         on_delete=models.CASCADE,
+        related_name="rooms"
     )
     description = models.TextField(blank=True, null=True)
-    amenities = models.ManyToManyField("rooms.Amenity")
+    amenities = models.ManyToManyField("rooms.Amenity", related_name="rooms")
     category = models.ForeignKey(
         "categories.Category",
         on_delete=models.SET_NULL,
+        related_name="rooms",
         blank=True,
         null=True,
     )
