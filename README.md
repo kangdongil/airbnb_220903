@@ -313,8 +313,44 @@
 - `admin.modelAdmin`
   - django가 default로 제공하는 admin panel
   - 그대로 사용한다면 pass할 것.
+- `pass` 대신에 이하 내용을 `tuple`(소괄호 배열)로 제시할 수 있다.
+- 항목이 한 개인 tuple은 쉼표를 넣어주자(종종 괄호가 사라짐.)
 
-### 5.2 Admin Panel 상황별로 해결하기
+### 5.2 Admin Panel 기능 살펴보기
+- `list_display`
+  - column에 제시할 내용
+  - `__str__`을 display 가능하다.
+  - `list_filter`
+  - 우측에 손쉽게 선택할 수 있는 필터메뉴
+- `list_editable`
+  - Instance를 list 자체에서 수정할 수 있도록 설정함.
+- `search_fields`
+  - 검색창을 표시함.
+  - ^(startswith)
+  - =(exact)
+  - `__[ForeignKey]`: ForeignKey한 model의 특정 field 대상으로 조회함.
+  - `search_help_text`: 검색방식에 대한 설명.
+- `actions`
+- `exclude`
+  - admin panel에서 값을 수정할 수 없도록 방지함.
+- `fields`/ `fieldsets`
+- `readonly_fields`
+  - 표시되지만 수정 안되는 구역
+
+### 5.2.1 Custom Actions
+- `admin.py`에 새로 만들 action에 대해 정의한다.
+  - 예)
+  ```python3
+  @admin.action(description="~")
+  def custom_action_name(model_admin, request, queryset):
+  ```
+   - `description`: admin panel에서 표시되는 action 내용
+   - `model_admin`: action을 취한 model_admin
+   - `request`: action을 요청한 user
+   - `queryset`: action할 대상(체크박스한 instances)
+- 정의한 action은 admin 내에 actions에 tuple로 넣는다.
+
+### 5.3 Admin Panel 상황별로 해결하기
 - Instance 이름으로 설정하기
   - `models.py`: `__str__`를 `self.name`으로 return하기
   - `f""`를 사용해 여러 field 값을 나타낼 수 있다.
@@ -327,24 +363,22 @@
   ```
 - 필수 내용이 아닐 때(description처럼)
   - `blank=True`
-- Admin Panel 기능 살펴보기
-  - `pass` 대신에 이하 내용을 `tuple`(소괄호 배열)로 제시할 수 있다.
-  - 항목이 한 개인 tuple은 쉼표를 넣어주자(종종 괄호가 사라짐.)
-  - `list_display`
-    - column에 제시할 내용
-    - `__str__`을 display 가능하다.
-  - `list_filter`
-    - 우측에 손쉽게 선택할 수 있는 필터메뉴
-  - `list_editable`
-    - Instance를 list 자체에서 수정할 수 있도록 설정함.
-  - `search_fields`
-    - 검색을 통해 조회할 내용
-  - `actions`
-  - `exclude`
-    - admin panel에서 값을 수정할 수 없도록 방지함.
-  - `fields`/ `fieldsets`
-  - `readonly_fields`
-    - 표시되지만 수정 안되는 구역
+
+### 5.4 Admin Panel를 Method로 확장하기
+- foreign_key된 instance가 몇 개인가?
+  - `.count()`
+- foreign_key된 instance의 integer field의 평균은 얼마인가?
+  - instance 갯수가 0일 때, exception 처리하기
+  ```python3
+  if count = 0:
+  	return "-"
+  ```
+  - for문으로 하되, `.all()`이 아닌 `.all().values("~")`로 한다.
+    - `.all()`은 instance의 모든 것을 불러오므로 data량이 많을수록 DB에 과부하를 일으킨다.
+    - `.all().values("~")는 필요한 field 값만 불러온다.`
+    - `.values()`한 값은 dict에 있으므로 `dict[value]`로 값을 빼낸다.
+    - 평균값은 (총합) / (Instance 개수)
+    - 소수점아래 두자리까지만 return한다. (`round`)
 
 ### 6.0 Django Users App
 - Django에서 자체적으로 User App을 제공한다.
@@ -606,6 +640,7 @@ class [Model명](TimeStampedModel):
     - filter에 여러 조건을 둘 수도 있다.
     - `.filter([PROP1]=[VALUE], [PROP2]=[VALUE])`
   - `.exclude([PROP]=[NAME])`: 결과 중 해당되는 값을 제외한다
+  - `.values("[PROP]")`: Instance 전체가 아닌 특정 field 값만 추려낸다.
 - DB에서 CRUD 역할을 하는 method들
   - `.create()`
     - `get_or_create()`: 중복되지 않게 DB에 data를 추가함.
