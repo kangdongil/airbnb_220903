@@ -338,7 +338,7 @@
   - 표시되지만 수정 안되는 구역
 
 ### 5.2.1 Custom Actions
-- `admin.py`에 새로 만들 action에 대해 정의한다.
+- `admin.py` 혹은 `actions.py`를 만들어 새로 추가할 action에 대해 정의한다.
   - 예)
   ```python3
   @admin.action(description="~")
@@ -349,6 +349,31 @@
    - `request`: action을 요청한 user
    - `queryset`: action할 대상(체크박스한 instances)
 - 정의한 action은 admin 내에 actions에 tuple로 넣는다.
+
+### 5.2.2 Custom Filters
+- Filter는 별도로 class를 만들고 `admin.SimpleListFilter`를 inherit한다.
+  - 예시)
+  ```python3
+  class [FilterName](admin.SimpleListFilter):
+  	title = "Custom Filter"
+    parameter_name = "param"
+    
+    def lookups(self, request, model_admin):
+    	return [("[PARAM]", "[FILTER_ITEM]")]
+    
+    def queryset(self, requests, queryset):
+    	param = self.value()
+        if param:
+        	queryset ~.filter()
+        else:
+        	return queryset
+  ```
+  - `title`: Admin Panel 우측 Filter칸 제목
+  - `parameter_name`: url창의 paramter
+  - `lookups` method: list. tuple 항목으로 이뤄져 있으며,   
+  (URL paramter값,Admin Panel 필터 항목)으로 구성되어 있다.
+  - `queryset` method: parameter 값을 따와서 실제 filter과정을 거치는 곳이다.
+- `request.GET.word[0]` 대신에 `self.value()`을 사용가능하다.
 
 ### 5.3 Admin Panel 상황별로 해결하기
 - Instance 이름으로 설정하기
