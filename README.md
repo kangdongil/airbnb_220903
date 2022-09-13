@@ -143,9 +143,10 @@
   - `python manage.py runserver 0.0.0.0:8000`
   - `config.settings`
     - `ALLOWED_HOSTS = ['*']`
-- `makemigrations`
-- `migrate`: Migration 진행하기
+- `makemigrations`: `models.py`에서 변경된 사항을 파일로 생성.
+- `migrate`: 변경된 내용을 적용함.
 - `createsuperuser`: 관리자 계정 생성하기
+- `shell`: Django코드 테스트하기
 
 ### 2.2 Migrate
 - DB의 형태를 코드에 맞게 수정하는 과정.
@@ -285,7 +286,6 @@
   - `help_text=`
   - `primary_key=`
   - `unique=`
-  - `verbose_name=`
   - `editable=`
 
 ### 5.0 Admin Panel
@@ -306,6 +306,8 @@
 - Instance 이름으로 설정하기
   - `models.py`: `__str__`를 `self.name`으로 return하기
   - `f""`를 사용해 여러 field 값을 나타낼 수 있다.
+- Model 이름에 `_`이 들어가는 경우,
+  - `apps.py`: `verbose_name = "Direct Messages"`
 - Model 복수명이 올바르지 않을 때
   ```python3
   class Meta:
@@ -536,3 +538,48 @@ class [Model명](TimeStampedModel):
   - description(`CharField`)
   - room / experience(`ForeignKey`)
     - if chooseable, make sure `null` and `blank` is `True`
+
+### 8.9 Direct Messages
+- `python manage.py startapp direct_messages`
+- `DirectMessagesConfig`을 `config/settings.py`에 등록하기
+- AdminPanel에서 `Direct_Messages`를 `Direct Messages`로 바꾸기
+  - `apps.py`: `verbose_name="Direct Messages"`
+- ChatRoom Model의 Entries 추가하기
+  - participants(`ManyToManyField`)
+- Message Model의 Entries 추가하기
+  - text(`TextField`)
+  - user / room(`ForeignKey`)
+- ChatRoomAdmin, MessageAdmin 구현하기
+
+## 9.0 ORM(Object Relational Mapper)
+- DB와 소통하여 data를 CRUD하는 API
+- `python manage.py shell`: InteractiveConsole(Django)
+- Django는 Model을 만들 때, Manager라 불리는 `.objects` method가 추가되며,   
+이는 DB와 소통하는 기능을 제공한다.
+- QuerySet: 개선된 Array로 연이은 작업을 가능하게 한다.
+  - chaining: 연이은 작업을 통해 원하는 결과를 구체적으로 받을 수 있다.
+  - lazy-load: DB 과부하를 방지하고자 구체적으로 요청한 내용만 DB를 호출함.
+### 9.1 Django Manager(`.objects`)
+- `.objects.all()`: 모든 Instance를 QuerySet로 제공함.
+- `.get([PROP]=[VALUE]): 조건에 해당하는 유일한 instance를 QuerySet로 제공함.
+- `.filter([PROP]=[VALUE])`: 조건에 해당하는 instance들을 QuerySet로 제공함.
+  - filter에 여러 조건을 둘 수도 있다.
+  - `.filter([PROP1]=[VALUE], [PROP2]=[VALUE])`
+- `.exclude([PROP]=[NAME])`: 결과 중 해당되는 값을 제외한다
+- `.create()`
+- `.delete()`
+- `.count()`
+* Field Lookups
+  - SQL에서 Where절에 해당함.
+  - 예)
+  ```python3
+  [Model].objects.filter(price__gte=50)
+  ```
+  - [PROP] 바로 뒤에 __[Lookup]을 적으면 조건에 해당한 결과를 받을 수 있다.
+  - `gt(e)` / `lt(e)`: greater than (equal) / less than (equal)
+  - contains: VALUE를 포함하는가?
+  - startswith: value로 시작하는가?
+
+- query값을 variable에 저장해 사용할 수 있다.
+- ForeignKey를 통해 다른 연관된 Model도 다룰 수 있다.
+- variable 값을 수정한 후, `.save()`하면 DB에 저장된다.  
