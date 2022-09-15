@@ -698,3 +698,77 @@ class [Model명](TimeStampedModel):
   ```python3
   Room.objects.filter(created_at__year=2022)
   ```
+  
+## 10.0 Django Views & Templates
+- `view`: URL을 접속했을 때 실행되는 function(=controller)
+- `template`: view 데이터를 동적으로 구현한 HTML
+  - `HttpResponse`, `render`방식이 있다.
+### 10.1 Django가 URL을 구현하는 과정
+- `models > urls > views`
+- `config/urls.py`: 프로젝트의 모든 URL을 관리하는 곳.
+  - 예)
+  ```python3
+  from django.urls import path
+  
+  urlpatterns = [
+      path('[URL]/', [Views_Function]),
+  ]
+  ```
+  - `urlpatterns`: path들의 배열
+  - `path`: `url`과 각 app의 views에서 import된 function을 연결함.
+- `[APP]/views.py`
+  - URL 접속할 때 실행되는 function이 모이는 곳.
+  - `request`라는 argument를 가짐.
+
+### 10.2 include로 URL을 app별로 묶기
+- App의 규모가 커지면서 path의 갯수가 많아지게 된다.
+- 수월한 url 관리를 위해 App 폴더별로 `urls.py`를 추가로 생성한다.
+- `config/urls.py`
+  - `[Views_Function]`자리에 `include("[apps].urls")`하기
+  ```python3
+  from django.urls import path, include
+  
+  urlpatterns = [
+  	path('[URL]/`, include("[apps].urls"))
+  ]
+  ```
+  - `include`: 마치 Router처럼, URL을 확장시켜준다.
+    - `django.urls.include`를 import하기
+- `[APP]/urls.py`
+  - 예시)
+  ```python3
+  # config.urls
+  path('rooms/', include("rooms.urls"))
+  # rooms.urls
+  path("join", views.join),
+  
+  ->> /rooms/join으로 접속할 수 있다.
+  ```
+
+### 10.3 View 데이터를 Template로 구현하기
+1. HttpResponse
+   - `django.http.HttpResponse`를 import하기
+   ```python3
+   HttpResponse("[CONTENT]")
+   ```
+   - String이나 짧은 HTML을 보낼 수 있다.
+2. render
+   - `django.shortcuts.render`를 import하기
+   - 예시)
+   ```python3
+   render([REQUEST], "[TEMPLATE].html", {VARIABLE_DICTS})
+   ```
+     - `[REQUEST]`는 views function의 argument인 request를 말한다.
+     - `[TEMPLATE]`은 해당 app의 `templates/` 폴더의 html 파일을 말한다.
+     - `{VARIABLE_DICTS}`은 dictionary 형식으로 Template에 변수를 보낼 수 있다. 
+### 10.3 URL에 Variable 넣는 방법
+- url이 variable을 받으려면
+  - `<int:[VAR]>` / `<str:[VAR]>`
+  - views function에도 argument에 variable을 추가해주어야 한다.
+- variable을 view function에서 template으로 넘기기
+- template에서 variable 사용하기
+  - `{{[VAR]}}`
+- Template에서 if문 사용하기
+  - `{% if [CONDITION] %}` / `{% else %}` / `{% endif %}`
+- Template에서 for문 사용하기
+  - `{% for [ITEM] in [LIST] %}` / `{% endfor %}`
