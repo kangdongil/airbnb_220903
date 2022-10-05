@@ -10,6 +10,7 @@ packages = [{include = "airbnb_220903"}]
 python = "^3.8"
 Django = "^4.1"
 Pillow = "^9.2.0"
+djangorestframework = "^3.13.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^22.8.0"

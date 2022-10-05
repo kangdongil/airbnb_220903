@@ -1,7 +1,6 @@
 from django.db import models
 from common.models import TimeStampedModel as CommonModel
 
-
 class Category(CommonModel):
 
     """Room Or Experience Category"""

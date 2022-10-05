@@ -216,6 +216,16 @@
   ```python3
   INSTALLED_APPS = [~, [apps].apps.[Apps]Config]
   ```
+### 3.1.2 APPS 목적에 따라 분류하기
+- 자주 사용하는 분류가 `SYSTEM_APPS`, `CUSTOM_APPS`, `THIRD_PARTY_APPS`이다.
+- 이 모든 분류는 `INSTALLED_APPS`에 포함되어야 한다.
+  - 예시
+    ```python3
+    SYSTEM_APPS = [...]
+    CUSTOM_APPS = [...]
+    THIRD_PARTY_APPS = [...]
+    INSTALLED_APPS = SYSTEM_APPS + CUSTOM_APPS + THIRD_PARTY_APPS
+    ```
 
 ### 4.0 App Model
 ### 4.0.1 App Model 구조 알아보기
@@ -587,7 +597,15 @@ class [Model명](TimeStampedModel):
   - Category의 복수형 이름을 `Categories`으로 바꾸기
   - list_display할 field를 정하기
   - list_filter할 field를 정하기
-  
+
+### 8.4.1 Categories API
+- `/categories`를 config.urls의 urlpatterns에 넣기
+  - `path("categories/", include("categories.urls"))`
+- 세부 url과 views 만들기
+  - view 함수 만들기
+  - views들을 import하기
+  - view함수와 세부 url 연결하기
+
 ### 8.5 Reviews App
 - `python manage.py startapp reviews`
 - `ReviewsConfig`을 `config/settings.py`에 등록하기
@@ -701,62 +719,62 @@ class [Model명](TimeStampedModel):
   
 ## 10.0 Django Views & Templates
 - `view`: URL을 접속했을 때 실행되는 function(=controller)
+  - view을 통해 HTML을 render하거나   
+  JSON으로 만들어 API를 구현할 수 있다.
 - `template`: view 데이터를 동적으로 구현한 HTML
   - `HttpResponse`, `render`방식이 있다.
 ### 10.1 Django가 URL을 구현하는 과정
-- `models > urls > views`
+- 작업순서: `models > urls > views`
 - `config/urls.py`: 프로젝트의 모든 URL을 관리하는 곳.
-  - 예)
-  ```python3
-  from django.urls import path
-  
-  urlpatterns = [
-      path('[URL]/', [Views_Function]),
-  ]
-  ```
-  - `urlpatterns`: path들의 배열
-  - `path`: `url`과 각 app의 views에서 import된 function을 연결함.
-- `[APP]/views.py`
-  - URL 접속할 때 실행되는 function이 모이는 곳.
-  - `request`라는 argument를 가짐.
-
-### 10.2 include로 URL을 app별로 묶기
-- App의 규모가 커지면서 path의 갯수가 많아지게 된다.
-- 수월한 url 관리를 위해 App 폴더별로 `urls.py`를 추가로 생성한다.
-- `config/urls.py`
-  - `[Views_Function]`자리에 `include("[apps].urls")`하기
+  - 예시)
   ```python3
   from django.urls import path, include
   
   urlpatterns = [
-  	path('[URL]/`, include("[apps].urls"))
+      path('[URL]/', include("[app_name].urls")),
   ]
   ```
-  - `include`: 마치 Router처럼, URL을 확장시켜준다.
-    - `django.urls.include`를 import하기
+  - `urlpatterns`: path들의 배열
+  - `path`: `url`과 각 app의 `views`에서 import된 function을 연결함.
+  - `include`: app마다 urls.py를 별도로 관리할 경우,   
+  `config.urls`과 `[app].urls`을 연결함.
+    - `django.urls.include`
 - `[APP]/urls.py`
   - 예시)
   ```python3
-  # config.urls
-  path('rooms/', include("rooms.urls"))
-  # rooms.urls
-  path("join", views.join),
+  from django.urls import path
+  from . import views
   
-  ->> /rooms/join으로 접속할 수 있다.
+  urlpatterns = [
+  	path('[URL]/', [View]),
+    ...
+  ]
   ```
-
-### 10.3 View 데이터를 Template로 구현하기
+  - `path`로 `url`과 `view`를 연결한다.
+  - `views.py`를 import한다.
+- `[APP]/views.py`
+  - 예시)
+  ```python3
+  def [VIEW_FUNCTION] (request):
+  	...(data processing)
+    return ~
+  ```
+  - URL 접속할 때 실행되는 function들을 담은 파일.
+  - view 함수는 항상 `request`라는 argument를 가짐.
+  - Model을 import하고 Manager로 데이터를 불러온다.
+  - 목적에 따라 HTML 혹은 JSON을 return한다.
+### 10.2 View 데이터를 Template로 구현하기
 1. HttpResponse
    - `django.http.HttpResponse`를 import하기
    ```python3
-   HttpResponse("[CONTENT]")
+   return HttpResponse("[CONTENT]")
    ```
    - String이나 짧은 HTML을 보낼 수 있다.
 2. render
    - `django.shortcuts.render`를 import하기
    - 예시)
    ```python3
-   render([REQUEST], "[TEMPLATE].html", {VARIABLE_DICTS})
+   return render([REQUEST], "[TEMPLATE].html", {VARIABLE_DICTS})
    ```
      - `[REQUEST]`는 views function의 argument인 request를 말한다.
      - `[TEMPLATE]`은 해당 app의 `templates/` 폴더의 html 파일을 말한다.
@@ -764,7 +782,11 @@ class [Model명](TimeStampedModel):
 ### 10.3 URL에 Variable 넣는 방법
 - url이 variable을 받으려면
   - `<int:[VAR]>` / `<str:[VAR]>`
-  - views function에도 argument에 variable을 추가해주어야 한다.
+  - views function에 argument에 variable을 받을 수 있다.
+  ```python3
+  def [view_function](request, pk):
+  	...
+  ```
 - variable을 view function에서 template으로 넘기기
 - template에서 variable 사용하기
   - `{{[VAR]}}`
@@ -772,3 +794,133 @@ class [Model명](TimeStampedModel):
   - `{% if [CONDITION] %}` / `{% else %}` / `{% endif %}`
 - Template에서 for문 사용하기
   - `{% for [ITEM] in [LIST] %}` / `{% endfor %}`
+- Template에서 404 처리하기
+  - try...except문 사용하기
+  - 만약 특정 pk의 instance가 `.get`되지 않을 경우, `render`에서 error가 뜨게 된다.
+  - 이때 `except [App].DoesNotExist`
+### 10.4 View 데이터를 JSON으로 return하기
+- JsonResponse
+  - `django.http.JsonResponse`를 import하기
+  ```python3
+  return JsonResponse({JSON})
+  ```
+  - 단, QuerySet을 JsonResponse로 보내려면 변환과정이 필요하다.
+- Serializer
+  - QuerySet을 Json으로 변환함.
+  - `django.core.serializers`를 import하기
+  - 예시)
+  ```python3
+  serializers.serialize("json", [QUERYSET]),
+  ```
+- 다음과 같은 방식으로 DB 내용을 JSON으로 넘길 수 있으나   
+  data를 가공하기 어려운 점이 있다.   
+  (Django REST framework을 써야할 이유)
+
+## 11.0 Django REST framework(DRF)
+- 쓰임새
+  - `RestAPI`를 보다 수월하게 관리하고 제작하는데 도움을 주는 library.
+  - DRF는 선택하여 url과 view에 적용할 수 있다.
+  - API 서버를 구축하는데 많이 사용된다.
+- 설치하기
+  - `poetry add djangorestframework`
+- THIRD_PARTY_APPS에 등록하기
+  - `rest_framework`
+- 사용할 views에 import하기
+  - `import res_framework`
+
+## 11.0.1 잘 설계한 REST API 만들기
+1. API가 사용할 url들을 나열해보자
+2. verb를 제거하고 공통 domain을 뽑아보자
+  - create_movies/ (x)
+  - movies/
+3. 공통 domain 옆에 두번째 path에는 고유식별자(unique-identifer) 두자
+  - movies/inception
+4. verb 대신에 HTTP Method를 사용하자
+   - `GET /movies/inception`
+5. 다른 object와의 관련성은 세번째 path에 넣는다.
+   - `DELETE /movies/inception/actors`
+6. 필터나 조건을 넣고 싶다면 `query parameter`를 이용한다.
+   - `GET /movies?release_date=2021`
+7. `query parameter`로 pagination도 추가할 수 있다.
+   - `GET /movies?release_date=2021&page=1`
+   
+* HTTP Method(CRUD) 종류
+   - `GET`(=READ): 서버로부터 data를 가져옴
+   - `POST`(=CREATE): 서버에 data를 보냄
+   - `PUT`(=UPDATE)
+   - `DELETE`
+
+## 11.0.2 Categories로 API 만들기 (예시)
+- GET /categories
+- POST /categories
+- GET /categories/1
+- PUT /categories/1
+- DELETE /categories/1
+
+## 11.1 DRF Response와 Serializer
+1. DRF Response
+   - "django.http.JsonResponse"를 개선함
+   - `rest_framework.response.Response`를 import하기
+   - 자료형을 제시하지 않고 Response할 data를 return하면 된다
+   - 예시)
+   ```python3
+   def [VIEW](request):
+   	...
+    return Response([DATA])
+   ```
+2. DRF Serializer
+   - "django.core.serializers"를 개선함
+   - `rest_framework.serializers`를 import하기
+   - custom한 serializer를 만든다
+     - `serializers.py`를 touch하기
+     - custom한 Class `Serializer` 만들기
+     - `serializers.Seralizer`를 `inherit`하기
+     - serializer가 참조할 `model`을 `import`하고   
+     Model의 `Field` 중 Response에 드러낼 내용을 상세히 설명한다.
+     - 이때 serializer의 field는 `Model Field`와 유사하다.
+     - 예시
+     ```python3
+     from rest_framework.serializers
+     from .models import Model
+     
+     class customSerailizers(serializers.Serializer):
+     	pk = serializers.IntegerField()
+     ```
+   - 직접만든 `Serializer`를 사용할 `views.py`에 `import`한다.
+   - `ORM`에서 받은 `queryset`을 `Serializer`을 넣는다.
+     - 단, queryset이 `여러 항목`인 경우,   
+     `many=True`하기
+   - serializer를 통과한 queryset을 `.data`해서 `Response`한다.
+     - 예시)
+     ```python3
+     ...View
+     items = Model.objects.all()
+     serializer = customSerializer(items, many=True)
+     return Response(serializer.data)
+     ```
+
+## 11.2 `@api_view`로 API 관리하기
+- `api_view`로 API를 Admin Panel처럼 관리하기
+  - `rest_framework.decorators.api_view`를 import하기
+  - 해당 view 함수 바로 앞에 `@api_view`를 붙인다.
+  - 예시)
+  ```python3
+  @api_view()
+  def [VIEW](request):
+  	...
+  ```
+- HTTP Method에 따라 api_view 관리하기
+   - 데코레이터(`@`)에 표시할 HTTP METHOD를 array로 준다.
+     - 예시)
+     ```python3
+     @api_view(["GET", "POST"])
+     def [VIEW](request):
+   	 	...
+     ```
+   - API의 HTTP METHOD는 `request.method`로 확인 가능하다.
+     - if문으로 method마다 실행할 코드를 작성한다.
+     - 예시)
+     ```python3
+     if request.method == "POST":
+     	...
+     ```
