@@ -806,7 +806,7 @@ class [Model명](TimeStampedModel):
   ```
   - 단, QuerySet을 JsonResponse로 보내려면 변환과정이 필요하다.
 - Serializer
-  - QuerySet을 Json으로 변환함.
+  - QuerySet를 Json으로 변환하거나 Json을 QuerySet으로 만드는 Formatter
   - `django.core.serializers`를 import하기
   - 예시)
   ```python3
@@ -825,10 +825,14 @@ class [Model명](TimeStampedModel):
   - `poetry add djangorestframework`
 - THIRD_PARTY_APPS에 등록하기
   - `rest_framework`
+- API URL 만들기
+  - 관례적으로 API 링크는 다음과 같은 구조를 가진다.
+    - `api/v1/categories`
+  - 자세한 내용은 11.0.1을 참고하기
 - 사용할 views에 import하기
   - `import res_framework`
 
-## 11.0.1 잘 설계한 REST API 만들기
+### 11.0.1 잘 설계한 REST API 만들기
 1. API가 사용할 url들을 나열해보자
 2. verb를 제거하고 공통 domain을 뽑아보자
   - create_movies/ (x)
@@ -850,14 +854,14 @@ class [Model명](TimeStampedModel):
    - `PUT`(=UPDATE)
    - `DELETE`
 
-## 11.0.2 Categories로 API 만들기 (예시)
+### 11.0.2 Categories로 API 만들기 (예시)
 - GET /categories
 - POST /categories
 - GET /categories/1
 - PUT /categories/1
 - DELETE /categories/1
 
-## 11.1 DRF Response와 Serializer
+### 11.1 DRF Response와 Serializer
 1. DRF Response
    - "django.http.JsonResponse"를 개선함
    - `rest_framework.response.Response`를 import하기
@@ -871,36 +875,51 @@ class [Model명](TimeStampedModel):
 2. DRF Serializer
    - "django.core.serializers"를 개선함
    - `rest_framework.serializers`를 import하기
-   - custom한 serializer를 만든다
-     - `serializers.py`를 touch하기
-     - custom한 Class `Serializer` 만들기
-     - `serializers.Seralizer`를 `inherit`하기
-     - serializer가 참조할 `model`을 `import`하고   
-     Model의 `Field` 중 Response에 드러낼 내용을 상세히 설명한다.
-     - 이때 serializer의 field는 `Model Field`와 유사하다.
-     - 예시
-     ```python3
-     from rest_framework.serializers
-     from .models import Model
-     
-     class customSerailizers(serializers.Serializer):
-     	pk = serializers.IntegerField()
-     ```
-   - 직접만든 `Serializer`를 사용할 `views.py`에 `import`한다.
-   - `ORM`에서 받은 `queryset`을 `Serializer`을 넣는다.
-     - 단, queryset이 `여러 항목`인 경우,   
-     `many=True`하기
+   - Serializer는 Model에 대응하여 만든다
+     - `serializers.Serializer`를 inherit하기
+     - `serializers.[FIELD]`로 json처리할 entry 정하기
+   - `ORM`로부터 받은 `queryset`을 `Serializer`에 넣는다.
+     - 단, queryset이 `여러 항목`일 경우, `many=True`하기
    - serializer를 통과한 queryset을 `.data`해서 `Response`한다.
      - 예시)
      ```python3
      ...View
-     items = Model.objects.all()
-     serializer = customSerializer(items, many=True)
+     queryset = Model.objects.all()
+     serializer = customSerializer(queryset, many=True)
      return Response(serializer.data)
      ```
 
-## 11.2 `@api_view`로 API 관리하기
-- `api_view`로 API를 Admin Panel처럼 관리하기
+### 11.1.1 Serializer 상황에 따른 구성하기
+- Serializer는 `serializers.py`를 만들어 관리한다.
+- Model의 Choice를 활용하고 싶다면 Choice를 Model에서 import한다.
+- queryset에 여러 항목이 있다면 `many=True`한다.
+  - 예시)
+  `customSerializer(queryset, many=True)`
+- Serializer를 이용해 POST한다면 data에 대해 자세히 설명한다.
+  - 자세히 설명한만큼 serializer는 데이터가 유효한지 검증해줄 것이다.
+  - client가 입력하지 않고 DB 데이터를 넣을 경우, `read_only=True`하기
+- POST할 경우, create 메서드를 만든다.
+  - client가 입력한 data가 유효한지(valid) 확인한 후, save할시 실행된다.
+  - `self`와 `validated_data`를 인자로 받는다.
+    - `validated_data`는 form으로 받은 POST할 data를 말한다.
+  - `ORM`으로 create하되, validated_data를 unpacking(**)한다.
+  - 예시)
+  ```python3
+  def create(self, validated_data):
+    	return Model.objects.create(**validated_data)
+  ```
+- PUT할 경우, update 메서드를 만든다.
+  - client가 입력한 data가 유효한지(valid) 확인한 후, save할시 실행된다.
+  - `self`, `instance`, `validated_data`를 인자로 받는다.
+    - `instance`는 DB에 불러온 기존 data를 말한다.
+    - `validated_data`는 form으로 받은 수정된 data를 말한다.
+  - DB 데이터를 form 데이터로 덮어씌우는 과정이 필요하다.
+    - `DICT.get([key], [DEFAULT])`를 사용한다.
+  - form 데이터를 적용한 instance를 return한다.
+
+### 11.2 `@api_view`로 API 관리하기
+- `api_view`는 일종의 Admin Panel로 API 관리를 용이하게 한다.
+- `api_view`로 API 관리하기
   - `rest_framework.decorators.api_view`를 import하기
   - 해당 view 함수 바로 앞에 `@api_view`를 붙인다.
   - 예시)
@@ -909,14 +928,17 @@ class [Model명](TimeStampedModel):
   def [VIEW](request):
   	...
   ```
-- HTTP Method에 따라 api_view 관리하기
-   - 데코레이터(`@`)에 표시할 HTTP METHOD를 array로 준다.
+- api_view에 여러 `HTTP Method`들을 허용하기
+   - `api_view`는 default로 `GET`을 제시한다.
+   - 여러 HTTP Method를 보여주려면   
+   데코레이터(`@`)에 표시할 HTTP METHOD들을 array로 준다.
      - 예시)
      ```python3
      @api_view(["GET", "POST"])
      def [VIEW](request):
    	 	...
      ```
+   - `api_view`는 `POST`가 허용되면 입력창을 제공한다.
    - API의 HTTP METHOD는 `request.method`로 확인 가능하다.
      - if문으로 method마다 실행할 코드를 작성한다.
      - 예시)
@@ -924,3 +946,88 @@ class [Model명](TimeStampedModel):
      if request.method == "POST":
      	...
      ```
+
+### 11.2.1 pk Parameter가 없는 페이지 대처하기(404)
+- try/except문
+- ORM으로 pk값인 data을 get한다.
+- 없으면(DoesNotExist) DRF식 Error인 `NotFound`를 Throw한다.
+  - `rest_framework.exceptions.NotFound`
+- 예시)
+```python3
+try:
+	qs = Model.objects.get(pk=pk)
+except Model.DoesNotExist:
+	raise NotFound
+```
+
+### 11.2.2 DRF로 StatusCode 보내기
+- StatusCode는 `rest_framework.status`에서 import하기
+- 다음은 프로젝트에서 사용한 status-code이다.
+  - `HTTP_204_NO_CONTENT`: queryset을 delete한다
+
+### 11.3 Serializer로 Form 데이터를 POST하기
+- Form 데이터를 POST하는 경우,   
+  Serializer는 반대로 Json을 queryset으로 변환한다.
+- Serializer에 입력한 데이터에 대해 자세히 설명한다.
+  - DB가 관리하는 데이터는 `read_only=True`하기
+- Serializer로 POST할 때, `data=request.data`를 받는다.
+  - 예시)
+  ```python3
+  def VIEW(request):
+  	...
+    Serializer(data=request.data)
+  ```
+- serializer를 통과한 data가 유효한지(valid)한지 확인한다.
+  - 유효하다면 `.save()`하여 create 메서드를 부른다.
+  - 유효하지 않다면 `.errors`를 Response한다.
+  - 예시)
+  ```python3
+  if serializer.is_valid():
+  	new_instance = serializer.save()
+    ...
+  else:
+  	return Response(serializer.errors)
+  ```
+- save한 데이터를 serializer에 넣고 .data를 Response한다
+  - 예시)
+  ```python3
+  ...
+  return Response(Serializer(new_instance).data)
+  ```
+
+### 11.4 Serializer로 data를 PUT하기
+- Form 데이터를 Update하려면,   
+  먼저 GET하고 이를 수정한 후 POST해야한다.
+- Serializer로 PUT할 때, 수정할 DB data와 수정될 Form data를 입력한다.
+  - 예시)
+  ```python3
+  Serializer(
+  	queryset,
+    data=request.data,
+    partial=True,
+  )
+  ```
+  - `queryset`은 수정하고자 하는 data다.
+  - `data-request.data`는 form 데이터로 바뀔 데이터다.
+  - `partial=True`는 required인 entry와 상관없이 입력되지 않은 data를 유지한다.
+- serializer를 통과한 data가 유효한지(valid)한지 확인한다.
+  - 유효하다면 `.save()`하여 create 메서드를 부른다.
+  - 유효하지 않다면 `.errors`를 Response한다.
+  - 예시)
+  ```python3
+  if serializer.is_valid():
+  	updated_instance = serializer.save()
+    ...
+  else:
+  	return Response(serializer.errors)
+  ```
+- save한 데이터를 serializer에 넣고 .data를 Response한다
+  - 예시)
+  ```python3
+  ...
+  return Response(Serializer(updated_instance).data)
+  ```
+
+### 11.5 Serializer로 data를 DELETE하기
+- `[QUERYSET].delete`하기
+- 204 StatusCode를 Response하기
