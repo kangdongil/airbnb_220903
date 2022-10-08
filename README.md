@@ -1031,3 +1031,11 @@ except Model.DoesNotExist:
 ### 11.5 Serializer로 data를 DELETE하기
 - `[QUERYSET].delete`하기
 - 204 StatusCode를 Response하기
+
+### 11.6 FBV(Function-based)를 CBV(Class-based)로 바꾸기
+- `rest_framework.views.APIView`
+- `APIView`를 inherit한 CBV를 만든다.
+- APIView는 메서드로 `get`, `post`, `put`, `delete`를 가진다.
+- 메서드 인자는 `self`와 url에서 받은 인자이다.
+- pk인 페이지가 존재하는지는 메서드 `get_object`에서 확인하여 queryset을 return한다.
+- get_object가 return한 queryset은 `self.get_object(pk)`로 받는다
