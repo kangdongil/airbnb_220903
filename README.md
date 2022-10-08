@@ -828,6 +828,7 @@ class [Model명](TimeStampedModel):
 - API URL 만들기
   - 관례적으로 API 링크는 다음과 같은 구조를 가진다.
     - `api/v1/categories`
+    - parameter는 `<int:pk>`로 한다.
   - 자세한 내용은 11.0.1을 참고하기
 - 사용할 views에 import하기
   - `import res_framework`
@@ -1035,7 +1036,54 @@ except Model.DoesNotExist:
 ### 11.6 FBV(Function-based)를 CBV(Class-based)로 바꾸기
 - `rest_framework.views.APIView`
 - `APIView`를 inherit한 CBV를 만든다.
-- APIView는 메서드로 `get`, `post`, `put`, `delete`를 가진다.
+- APIView는 어떤 HTTP Method냐를 class 메서드로 구분해준다.
+  - 메서드는 `get`, `post`, `put`, `delete`와 같이 약속된 이름을 사용하기
 - 메서드 인자는 `self`와 url에서 받은 인자이다.
-- pk인 페이지가 존재하는지는 메서드 `get_object`에서 확인하여 queryset을 return한다.
-- get_object가 return한 queryset은 `self.get_object(pk)`로 받는다
+- pk인 페이지가 존재하는지는 메서드를 만들어 확인한 후 queryset을 return한다.
+- return한 queryset은 `self.get_object(pk)`로 받는다
+  - self.get_object(pk)를 variable에 저장하면 사용하기 편하다.
+
+### 11.7 ModelSerializer
+- `serializers.ModelSerializer`
+- `class Meta`에 import한 model을 `model=`한다
+    - 예시)
+    ```python3
+    class Serializer(serializers.ModelSerializer):
+    	class Meta:
+        	model = Category
+            exclude = (
+                "created_at",
+                "updated_at",
+            )
+    ```
+- 드러낼 항목을 정하려면 "fields" / 제외할 항목을 정하려면 "exclude"   
+  / 모든 항목을 드러내려면 "fields="__all__""
+
+#### 11.7.1 ModelViewSet(다른 옵션)
+- res_framework.viewsets.ModelViewSet
+- 채택할 Serializer와 처리할 Queryset만 작성한다.
+  - 예시)
+  ```python3
+  class CategoryViewSet(ModelViewSet):
+    serializer_class = CategorySerializer
+    queryset = Category.objects.all()
+  ```
+- HTTP Method는 URL에 정의한다.
+- .as_view()안에 정의한다.
+  - 예시)
+  ```python3
+  # ListView 경우,
+  as_view({
+      "get": "list",
+      "post": "create",
+  })
+
+  # DetailView 경우(pk 필요),
+  as_view({
+    "get": "retrieve",
+    "put": "partial_update",
+    "delete": "destroy",
+  })
+  ```
+- DRF에서 제공하는 프리셋을 적극 활용하고 싶다면   
+  `Router`나 `Mixins`를 활용할 수 있다.
