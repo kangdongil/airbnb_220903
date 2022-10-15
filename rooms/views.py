@@ -4,12 +4,15 @@ from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
 from .models import Amenity
 from .serializers import AmenitySerializer
+from common.paginations import ListPagination
 
-
-class Amenities(APIView):
+class AmenityList(APIView, ListPagination):
     def get(self, request):
-        all_amenities = Amenity.objects.all()
-        serializer = AmenitySerializer(all_amenities, many=True)
+        all_amenities = Amenity.objects.all().order_by("pk")
+        serializer = AmenitySerializer(
+            self.paginate(all_amenities, request),
+            many=True,
+        )
         return Response(serializer.data)
 
     def post(self, request):

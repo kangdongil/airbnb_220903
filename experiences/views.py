@@ -4,12 +4,15 @@ from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
 from .models import Perk
 from .serializers import PerkSerializer
+from common.paginations import ListPagination
 
-
-class Perks(APIView):
+class PerkList(APIView, ListPagination):
     def get(self, request):
-        all_perks = Perk.objects.all()
-        serializer = PerkSerializer(all_perks, many=True)
+        all_perks = Perk.objects.all().order_by("pk")
+        serializer = PerkSerializer(
+            self.paginate(all_perks, request),
+            many=True,
+        )
         return Response(serializer.data)
     
     def post(self, request):
