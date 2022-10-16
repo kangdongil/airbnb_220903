@@ -179,6 +179,9 @@ class RoomDetail(APIView, ListPagination):
         return Response(status=HTTP_204_NO_CONTENT)
     
 class RoomReviews(APIView, ListPagination):
+    
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    
     def get_object(self, pk):
         try:
             return Room.objects.get(pk=pk)
@@ -193,6 +196,17 @@ class RoomReviews(APIView, ListPagination):
             many=True,
         )
         return Response(serializer.data)
+    
+    def post(self, request, pk):
+        room = self.get_object(pk)
+        serializer = ReviewSerializer(data=request.data)
+        if serializer.is_valid():
+            review = serializer.save(
+                user=request.user,
+                room=room,
+            )
+            serializer = ReviewSerializer(review)
+            return Response(serializer.data)
     
 class RoomAmenities(APIView, ListPagination):
     def get_object(self, pk):
@@ -210,7 +224,7 @@ class RoomAmenities(APIView, ListPagination):
         )
         return Response(serializer.data)
 
-class RoomPhotos(APIView):
+class RoomPhotos(APIView, ListPagination):
     
     permission_classes = [IsAuthenticated]
     
@@ -220,7 +234,16 @@ class RoomPhotos(APIView):
         except Room.DoesNotExist:
             return NotFound
     
-    def post(self,request, pk):
+    def get(self, request, pk):
+        room = self.get_object(pk)
+        photos = room.photos.all().order_by("pk")
+        serializer = PhotoSerializer(
+        	self.paginate(photos, request),
+            many=True,
+        )
+        return Response(serializer.data)
+    
+    def post(self, request, pk):
         room = self.get_object(pk)
         if request.user != room.owner:
             raise PermissionDenied
