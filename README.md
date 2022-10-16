@@ -831,7 +831,7 @@ class [Model명](TimeStampedModel):
     - parameter는 `<int:pk>`로 한다.
   - 자세한 내용은 11.0.1을 참고하기
 - 사용할 views에 import하기
-  - `import res_framework`
+  - `import rest_framework`
 
 ### 11.0.1 잘 설계한 REST API 만들기
 1. API가 사용할 url들을 나열해보자
@@ -855,13 +855,6 @@ class [Model명](TimeStampedModel):
    - `PUT`(=UPDATE)
    - `DELETE`
 
-### 11.0.2 Categories로 API 만들기 (예시)
-- GET /categories
-- POST /categories
-- GET /categories/1
-- PUT /categories/1
-- DELETE /categories/1
-
 ### 11.1 DRF Response와 Serializer
 1. DRF Response
    - "django.http.JsonResponse"를 개선함
@@ -875,7 +868,7 @@ class [Model명](TimeStampedModel):
    ```
 2. DRF Serializer
    - "django.core.serializers"를 개선함
-   - `rest_framework.serializers`를 import하기
+   - `rest_framework.serializers.Serializer`를 import하기
    - Serializer는 Model에 대응하여 만든다
      - `serializers.Serializer`를 inherit하기
      - `serializers.[FIELD]`로 json처리할 entry 정하기
@@ -889,8 +882,23 @@ class [Model명](TimeStampedModel):
      serializer = customSerializer(queryset, many=True)
      return Response(serializer.data)
      ```
+3. ModelSerializer
+   - Serializer의 entries를 일일히 설정하지 않고   
+   Model을 참조하여 개선한 serializer
+   - `rest_framework.serializers.ModelSerializer`를 import하기
+   - `class Meta`를 열고 `참조할 model`과 `참조할 fields`를 설정한다.
+     - 예시)
+     ```python3
+     class Serializer(ModelSerializer):
+     	class Meta:
+        	model = Model
+            fields = ("pk", "name", "description")
+     ```
+     - `model`은 import한다
+     - model의 모든 fields를 참조하고 싶다면, `fields = "__all__"`
+     - 반대로 특정 fields를 제외하고 싶다면, `exclude = (~)`
 
-### 11.1.1 Serializer 상황에 따른 구성하기
+### 11.1.1 Serializer 다루기
 - Serializer는 `serializers.py`를 만들어 관리한다.
 - Model의 Choice를 활용하고 싶다면 Choice를 Model에서 import한다.
 - queryset에 여러 항목이 있다면 `many=True`한다.
@@ -918,7 +926,7 @@ class [Model명](TimeStampedModel):
     - `DICT.get([key], [DEFAULT])`를 사용한다.
   - form 데이터를 적용한 instance를 return한다.
 
-### 11.2 `@api_view`로 API 관리하기
+### 11.1.2 `@api_view`로 API 관리하기
 - `api_view`는 일종의 Admin Panel로 API 관리를 용이하게 한다.
 - `api_view`로 API 관리하기
   - `rest_framework.decorators.api_view`를 import하기
@@ -948,7 +956,21 @@ class [Model명](TimeStampedModel):
      	...
      ```
 
-### 11.2.1 pk Parameter가 없는 페이지 대처하기(404)
+### 11.1.3 DRF Exception
+- DRF에서 제공하는 Exception으로 return하면 Error를 발생할 수 있다.
+- 해당 Exception을 `raise`하면 된다
+- NotFound
+  - `rest_framework.exceptions.NotFound`
+  - 404 Error
+- NotAuthenticated
+  - `rest_framework.exceptions.NotAuthenticated`
+  - 401/404 Error
+  - `request.user.is_authenticated`로 authenticated 여부를 확인한다
+  - permission_classes로 처리가능하다
+- ParseError
+- PermissionDenied
+
+#### 11.1.3.1 ORM에서 pk인 object를 가져올 때 ErrorHandling하기
 - try/except문
 - ORM으로 pk값인 data을 get한다.
 - 없으면(DoesNotExist) DRF식 Error인 `NotFound`를 Throw한다.
@@ -961,16 +983,26 @@ except Model.DoesNotExist:
 	raise NotFound
 ```
 
-### 11.2.2 DRF로 StatusCode 보내기
+### 11.1.4 DRF Status Codes
 - StatusCode는 `rest_framework.status`에서 import하기
-- 다음은 프로젝트에서 사용한 status-code이다.
-  - `HTTP_204_NO_CONTENT`: queryset을 delete한다
+- StatusCode는 Response과 함께 본다.
+  - 예시)
+  ```python3
+  class View():
+  	...
+    return Response(DATA, status= ~)
+  ```
+- 다음은 사용가능한 statuscode이다.
+  - `HTTP_200_OK`
+    - 정상적인 Response
+  - `HTTP_204_NO_CONTENT`
+    - queryset을 delete할때
+  - `HTTP_404_NOT_FOUND`
+    - 해당 페이지가 존재하지 않을 때
 
-### 11.3 Serializer로 Form 데이터를 POST하기
+### 11.2 Serializer로 Form 데이터를 POST하기
 - Form 데이터를 POST하는 경우,   
   Serializer는 반대로 Json을 queryset으로 변환한다.
-- Serializer에 입력한 데이터에 대해 자세히 설명한다.
-  - DB가 관리하는 데이터는 `read_only=True`하기
 - Serializer로 POST할 때, `data=request.data`를 받는다.
   - 예시)
   ```python3
@@ -993,10 +1025,61 @@ except Model.DoesNotExist:
   - 예시)
   ```python3
   ...
-  return Response(Serializer(new_instance).data)
+  serializer = Serializer(new_instance)
+  return Response(serializer.data)
   ```
-
-### 11.4 Serializer로 data를 PUT하기
+#### 11.2.1 상황별 POST 대처하기
+- POST가 허가된 자인지 확인하기
+  - `request.user.is_authenticated`인가?
+  - 아니라면, `NotAuthenticated`를 raise하기
+  - 예시)
+  ```python3
+  if not request.user.is_authenticated:
+	raise NotAuthenticated
+  ```
+- ForeignKey 데이터 POST하기
+  - form에서 foreignkey의 pk값 받아오기
+    - `request.data.get("[ENTRY]")`
+  - pk값이 실제로 db에 존재하는 값인지 확인하고 queryset 저장하기
+    - `.objects.get(pk=~)`
+    - `.DoesNotExist`
+  - `.save`에 foreignkey 추가하기
+    - 예시)
+    ```python3
+    new_instance = serializer.save(
+    	fk=queryset,
+    )
+    ```
+- ManyToManyField 데이터 POST하기
+  - MTMField는 `.save()` 이후에 진행된다
+  - MTMField는 list(`[]`)를 value를 가진다
+  - for문으로 list의 item들을 각각 `.objects.get`하고   
+    `.save()`한 data의 MTMField에 add한다.
+    - 예시)
+    ```python3
+    mtm_pks = request.data.get("[ENTRY]")
+    ...
+    new_instance = serializer.save()
+    ...
+    if mtm_pks:
+    	for mtm_pk in mtm_pks:
+        	mtm = Mtm.objects.get(pk=mtm_pk)
+            new_instance.mtms.add(mtm)
+    ```
+  - MTMField는 `.save()` 이후에 검증이 이뤄지므로   
+  POST에 실패하면 이를 `transaction`으로 ROLLBACK할 필요가 있다
+    - `django.db.transaction`
+    - 예시)
+    ```python3
+    from django.db import transaction
+    ...
+    with transaction.atomic():
+    	...
+        serializer.save()
+        ...
+        [MTMField]
+    ```
+### 11.3 Serializer로 data를 PUT하기
 - Form 데이터를 Update하려면,   
   먼저 GET하고 이를 수정한 후 POST해야한다.
 - Serializer로 PUT할 때, 수정할 DB data와 수정될 Form data를 입력한다.
@@ -1012,7 +1095,7 @@ except Model.DoesNotExist:
   - `data-request.data`는 form 데이터로 바뀔 데이터다.
   - `partial=True`는 required인 entry와 상관없이 입력되지 않은 data를 유지한다.
 - serializer를 통과한 data가 유효한지(valid)한지 확인한다.
-  - 유효하다면 `.save()`하여 create 메서드를 부른다.
+  - 유효하다면 `.save()`하여 update 메서드를 부른다.
   - 유효하지 않다면 `.errors`를 Response한다.
   - 예시)
   ```python3
@@ -1026,64 +1109,131 @@ except Model.DoesNotExist:
   - 예시)
   ```python3
   ...
-  return Response(Serializer(updated_instance).data)
+  serializer = Serializer(updated_instance)
+  return Response(serializer.data)
   ```
 
 ### 11.5 Serializer로 data를 DELETE하기
-- `[QUERYSET].delete`하기
+- 예시)
+```python3
+def delete(self, request, pk):
+  instance = self.get_object(pk)
+  instance.delete()
+  return Response(status=HTTP_204_NO_CONTENT)
+```
+- `[QUERYSET].delete()`하기
 - 204 StatusCode를 Response하기
 
-### 11.6 FBV(Function-based)를 CBV(Class-based)로 바꾸기
+### 11.6 APIView 사용하기
+- `@api_view`를 Class로 정의한 것이다
 - `rest_framework.views.APIView`
-- `APIView`를 inherit한 CBV를 만든다.
-- APIView는 어떤 HTTP Method냐를 class 메서드로 구분해준다.
-  - 메서드는 `get`, `post`, `put`, `delete`와 같이 약속된 이름을 사용하기
-- 메서드 인자는 `self`와 url에서 받은 인자이다.
-- pk인 페이지가 존재하는지는 메서드를 만들어 확인한 후 queryset을 return한다.
-- return한 queryset은 `self.get_object(pk)`로 받는다
-  - self.get_object(pk)를 variable에 저장하면 사용하기 편하다.
-
-### 11.7 ModelSerializer
-- `serializers.ModelSerializer`
-- `class Meta`에 import한 model을 `model=`한다
-    - 예시)
-    ```python3
-    class Serializer(serializers.ModelSerializer):
-    	class Meta:
-        	model = Category
-            exclude = (
-                "created_at",
-                "updated_at",
-            )
-    ```
-- 드러낼 항목을 정하려면 "fields" / 제외할 항목을 정하려면 "exclude"   
-  / 모든 항목을 드러내려면 "fields="__all__""
-
-#### 11.7.1 ModelViewSet(다른 옵션)
-- res_framework.viewsets.ModelViewSet
-- 채택할 Serializer와 처리할 Queryset만 작성한다.
+- `APIView`를 inherit한 CBV(Class-Based View)를 만든다.
+- APIView는 어떤 HTTP Method냐를 메서드(method)로 구분해준다.
   - 예시)
   ```python3
-  class CategoryViewSet(ModelViewSet):
-    serializer_class = CategorySerializer
-    queryset = Category.objects.all()
+  class View(APIView):
+  	def get(self, request, pk):
+    	...
+        
+    def post(self, request, pk):
+    	...
   ```
-- HTTP Method는 URL에 정의한다.
-- .as_view()안에 정의한다.
+  - 메서드는 `get`, `post`, `put`, `delete`처럼 약속한 이름을 사용하기
+  - 메서드 인자는 `self`를 비롯한 `request` 그리고 `url에서 받은 params`이다
+- urls.path를 정의할 때, `.as_view()`를 추가한다.
   - 예시)
   ```python3
-  # ListView 경우,
-  as_view({
-      "get": "list",
-      "post": "create",
-  })
-
-  # DetailView 경우(pk 필요),
-  as_view({
-    "get": "retrieve",
-    "put": "partial_update",
-    "delete": "destroy",
-  })
+  path("", views.ClassView.as_view())
   ```
-- DRF에서 제공하는 프리셋을 적극 활용하고 싶다면   
-  `Router`나 `Mixins`를 활용할 수 있다.
+#### 11.6.1 APIView vs. ModelViewSet
+1. APIView
+   - HTTP Method가 코드 구조에 잘 드러나며 높은 Customize를 제공한다.
+   - Response, Serializer 등 DRF 기본 기능을 직접 활용하기 좋다.
+2. ModelViewSet
+   - `rest_framework.viewsets.ModelViewSet`
+   - Queryset과 사용할 Serializer만 입력하면 된다
+     - 예시)
+     ```python3
+     class CategoryViewSet(ModelViewSet):
+     	serializer_class = CategorySerializer
+     	queryset = Category.objects.all()
+     ```
+   - HTTP Method는 URL에서 정의한다.
+     - ListView의 경우)
+     ```python3
+	 as_view({
+     	"get": "list",
+     	"post": "create",
+     })
+     ```
+     - DeatilView의 경우)
+     ```python3
+  	 as_view({
+     	"get": "retrieve",
+     	"put": "partial_update",
+     	"delete": "destroy",
+  	 })
+  	 ```
+    - DRF에서 제공하는 Preset인 `Router`와 `Mixin`을 활용할 수 있다.
+
+* ModelViewSet은 높은 추상성과 빠르게 구축할 수 있다.
+  하지만 어떻게 구현되는지 살펴보기 어려우며 변화를 주기 어렵다.
+
+### 11.7 ModelSerializer 사용하기
+#### 11.7.1 Serializer Method
+- `Model Method`처럼 Serializer가 Method를 처리할 수 있다
+- `rest_framework.serializers.SerializerMethodField`
+- Serializer Method 사용하는 방법
+  1. Model Method가 있는지 확인한다
+     - 예시)
+     ```python3
+     def rating(room):
+     	... 
+     ```
+  2. Serializer Method를 선언한다.
+     - `rating = SerializerMethodField()`
+  3. `get_`으로 시작하는 메서드를 만들고   
+    instance의 Model Method를 return한다
+     - 예시)
+     ```python3
+     class Serializer(ModelSerializer):
+     	rating = SerializerMethodField()
+        
+        class Meta:
+        	...
+        
+        def get_rating(self, instance):
+        	return instance.rating()
+     ```
+#### 11.7.2 Serializer Context
+- View에서 Serializer로 context를 넘겨줄 수 있다
+  - `request`가 대표적이다
+- Serializer Context 사용하는 방법
+  1. data를 view에서 serializer로 넘겨받기
+     - 예시)
+     ```python3
+     serializer = Serializer(
+     	...,
+        context={"": ~},
+     )
+     ```
+     - 같은 Serializer를 사용하는 곳에 같은 context를 넣어줘야 error가 발생하지 않는다
+  2. 메서드 선언하고 `self.context`로부터 data를 받는다.
+     - context는 dictionary이므로 `context["~"]` 형태로 한다.
+     - 예시)
+     ```python3
+     self.context["~"]
+     ```
+     
+### 12.0 App별 API 구축하기(예시)
+### 12.0.1 API 구축하는 순서 알아보기
+1. urls 관리하기
+2. APIView로 views 만들기
+   - HTTP Method마다 코드 작성하기
+3. ModelSerializer로 Queryset을 JSON으로 변환하기
+   - data 양에 따라 pagination 적용하기
+
+### 12.1 Categories API / Perks API
+### 12.2 Rooms API
+### 12.2.1 Room Reviews API
+### 12.2.2 Room Amenities API
