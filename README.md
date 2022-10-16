@@ -1150,17 +1150,17 @@ def delete(self, request, pk):
   - 직접 `request.user.is_authenticated`를 확인하는 방법이 아닌   
     `permission_classes`에 Permission 범위를 지정할 수 있다
   - `rest_framework.permissions.IsAuthenticated`
-  - class 맨 앞줄에 `permission_classes`를 지정한다
-  - 예시)
-  ```python3
-  from rest_framework.permissions import IsAuthenticated
-  
-  class View(APIView):
-  	permission_classes = [IsAuthenticated]
-    ...
-  ```
-  - View가 모두에게 공개된 get을 가지는 경우 `IsAuthenticatedOrReadOnly`를 사용한다
-    - `rest_framework.permissions.IsAuthenticatedOrReadOnly`
+    - class 맨 앞줄에 `permission_classes`를 지정한다
+    - 예시)
+    ```python3
+    from rest_framework.permissions import IsAuthenticated
+    
+    class View(APIView):
+  	  permission_classes = [IsAuthenticated]
+      ...
+    ```
+  - `rest_framework.permissions.IsAuthenticatedOrReadOnly`
+    - `get`에 한해서만 모두에게 공개하고 싶을 때,
     
 #### 11.6.2 APIView vs. ModelViewSet
 1. APIView
