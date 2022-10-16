@@ -1224,7 +1224,33 @@ def delete(self, request, pk):
      ```python3
      self.context["~"]
      ```
-     
+### 11.8 Django에서 Media 다루기
+#### 11.8.1 Media를 URL에 드러내기
+- config.settings
+```python3
+MEDIA_ROOT = "uploads"
+MEDIA_URL = "uploads/"
+```
+- config.urls
+```python3
+from django.conf.urls.static import static
+from django.conf import settings
+
+urlpatterns = [ ... 
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+```
+#### 11.8.2 RoomPhoto와 ExperienceVideo 만들기
+- 작업순서: models > urls > views > serializer
+- models 작업하기
+  - Dev 단계에서는 PhotoField / FileField를 사용함.
+  - Deploy할 때는 URLField
+  - Field 바꿀 때는 `makemigrations`과 `migrate` 필수
+- views 작업하기
+  - Photo POST는 room이나 experience의 relation이 필요하므로 rooms.views에 작업한다
+  - Photo DELETE는 relation과 관련이 없으므로 medias.views에 작업한다
+  - Photo는 Room 또는 Experience에 속하므로 Permission 확인할 때 참고한다
+  
+  
 ### 12.0 App별 API 구축하기(예시)
 ### 12.0.1 API 구축하는 순서 알아보기
 1. urls 관리하기

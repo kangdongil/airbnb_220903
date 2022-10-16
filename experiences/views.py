@@ -56,3 +56,11 @@ class PerkDetail(APIView):
         perk = self.get_object(pk)
         perk.delete()
         return Response(status=HTTP_204_NO_CONTENT)
+
+class ExperiencePhotos(APIView):
+    def post(self,request, pk):
+        pass
+
+class ExperienceVideos(APIView):
+    def post(self,request, pk):
+        pass
