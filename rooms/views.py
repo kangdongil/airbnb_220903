@@ -7,6 +7,7 @@ from common.paginations import ListPagination
 from categories.models import Category
 from .models import Room, Amenity
 from .serializers import AmenitySerializer, RoomListSerializer, RoomDetailSerializer
+from reviews.serializers import ReviewSerializer
 
 class AmenityList(APIView, ListPagination):
     def get(self, request):
@@ -166,3 +167,36 @@ class RoomDetail(APIView, ListPagination):
             raise PermissionDenied
         room.delete()
         return Response(status=HTTP_204_NO_CONTENT)
+    
+class RoomReviews(APIView, ListPagination):
+    def get_object(self, pk):
+        try:
+            return Room.objects.get(pk=pk)
+        except Room.DoesNotExist:
+            return NotFound
+        
+    def get(self, request, pk):
+        room = self.get_object(pk)
+        reviews = room.reviews.all().order_by("pk")
+        serializer = ReviewSerializer(
+        	self.paginate(reviews, request),
+            many=True,
+        )
+        return Response(serializer.data)
+    
+class RoomAmenities(APIView, ListPagination):
+    def get_object(self, pk):
+        try:
+            return Room.objects.get(pk=pk)
+        except Room.DoesNotExist:
+            return NotFound
+        
+    def get(self, request, pk):
+        room = self.get_object(pk)
+        amenities = room.amenities.all().order_by("pk")
+        serializer = AmenitySerializer(
+        	self.paginate(amenities, request),
+            many=True,
+        )
+        return Response(serializer.data)
+    
