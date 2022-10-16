@@ -1,5 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.status import HTTP_204_NO_CONTENT
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
 from .models import Perk
@@ -7,6 +8,9 @@ from .serializers import PerkSerializer
 from common.paginations import ListPagination
 
 class PerkList(APIView, ListPagination):
+    
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    
     def get(self, request):
         all_perks = Perk.objects.all().order_by("pk")
         serializer = PerkSerializer(
@@ -26,6 +30,9 @@ class PerkList(APIView, ListPagination):
             return Response(serializer.errors)
     
 class PerkDetail(APIView):
+    
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    
     def get_object(self, pk):
         try:
             return Perk.objects.get(pk=pk)

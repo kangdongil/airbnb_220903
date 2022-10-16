@@ -3,7 +3,6 @@ from users.serializers import TinyUserSerializer
 from categories.serializers import CategorySerializer
 from .models import Room, Amenity
 
-
 class AmenitySerializer(ModelSerializer):
     class Meta:
         model = Amenity
