@@ -1,6 +1,7 @@
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
+from rest_framework.exceptions import ParseError
 from rest_framework.permissions import IsAuthenticated
 from . import serializers
 
@@ -25,4 +26,22 @@ class Me(APIView):
             serializer = serializers.PrivateUserSerializer(new_user)
             return Response(serializer.data)
         else:
-            return Response(serializers.errors)
+            return Response(serializer.errors)
+
+class Users(APIView):
+    
+    def post(self, request):
+        password = request.data.get("password")
+        if not password:
+            raise ParseError
+        serializer = serializers.PrivateUserSerializer(data=request.data)
+        if serializer.is_valid():
+            new_user = serializer.save()
+            new_user.set_password(password)
+            new_user.save()
+            serializer = serializers.PrivateUserSerializer(new_user)
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors)
+    
+    
