@@ -41,6 +41,7 @@ SYSTEM_APPS = [
 
 THIRD_PARTY_APPS = [
     "rest_framework",
+    "rest_framework.authtoken",
 ]
 
 CUSTOM_APPS = [
@@ -149,3 +150,12 @@ AUTH_USER_MODEL = 'users.User'
 
 MEDIA_ROOT = "uploads"
 MEDIA_URL = "uploads/"
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        #"rest_framework.authentication.BasicAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+        "config.authentication.TrustMeBroAuthentication",
+        "rest_framework.authentication.TokenAuthentication",
+    ]
+}
